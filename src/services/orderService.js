@@ -216,12 +216,14 @@ class OrderService {
       sqlParams.push(`%${email}%`);
     }
     
-    if (status !== undefined) {
+    const hasStatus = status !== undefined && status !== null && status !== '';
+    if (hasStatus) {
       sql += ' AND o.order_status = ?';
       sqlParams.push(status);
     }
     
-    if (product_id) {
+    const hasProduct = product_id !== undefined && product_id !== null && product_id !== '';
+    if (hasProduct) {
       sql += ' AND o.product_id = ?';
       sqlParams.push(product_id);
     }
@@ -269,12 +271,14 @@ class OrderService {
       sqlParams.push(`%${email}%`);
     }
 
-    if (status !== undefined) {
+    const hasStatus = status !== undefined && status !== null && status !== '';
+    if (hasStatus) {
       sql += ' AND o.order_status = ?';
       sqlParams.push(status);
     }
 
-    if (product_id) {
+    const hasProduct = product_id !== undefined && product_id !== null && product_id !== '';
+    if (hasProduct) {
       sql += ' AND o.product_id = ?';
       sqlParams.push(product_id);
     }
