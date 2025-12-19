@@ -60,7 +60,8 @@ class Database {
   async query(sql, params = []) {
     const startTime = Date.now();
     try {
-      const [rows] = await this.pool.execute(sql, params);
+      // 使用 query 代替 execute 避免预编译参数类型问题
+      const [rows] = await this.pool.query(sql, params);
       const duration = Date.now() - startTime;
       
       if (duration > 1000) {
