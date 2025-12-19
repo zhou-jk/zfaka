@@ -11,9 +11,15 @@ const { BusinessError } = require('./errorHandler');
  * 验证管理员登录状态（Session 方式）
  */
 function requireAdminAuth(req, res, next) {
+  // 检查是否是 API 请求
+  const isApiRequest = req.originalUrl.startsWith('/api/') || 
+                       req.xhr || 
+                       req.headers['content-type']?.includes('multipart/form-data') ||
+                       req.headers.accept?.includes('application/json');
+  
   if (!req.session || !req.session.user) {
     // API 请求返回 JSON
-    if (req.path.startsWith('/api/') || req.xhr) {
+    if (isApiRequest) {
       return fail(res, ErrorCodes.UNAUTHORIZED);
     }
     // 页面请求重定向到登录
@@ -23,7 +29,7 @@ function requireAdminAuth(req, res, next) {
   
   // 验证是否是管理员
   if (req.session.user.role !== 1) {
-    if (req.path.startsWith('/api/') || req.xhr) {
+    if (isApiRequest) {
       return fail(res, ErrorCodes.FORBIDDEN);
     }
     return res.redirect('/admin/login');

@@ -9,7 +9,7 @@
     <h4 class="mb-0">商品分类</h4>
     <small class="text-muted">管理商品分类</small>
   </div>
-  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openAddModal()">
+  <button type="button" class="btn btn-primary" onclick="openAddModal()">
     <i class="bi bi-plus-lg me-2"></i>添加分类
   </button>
 </div>
@@ -51,7 +51,7 @@
               <td>
                 <div class="btn-group btn-group-sm">
                   <button type="button" class="btn btn-outline-primary" title="编辑" 
-                          onclick='openEditModal(<%- JSON.stringify(c) %>)'>
+                          onclick="openEditModal(<%= c.id %>)">
                     <i class="bi bi-pencil"></i>
                   </button>
                   <button type="button" class="btn btn-outline-danger" title="删除" 
@@ -120,9 +120,16 @@
   </div>
 </div>
 
+<%- include('partials/footer') %>
+
 <script>
   let currentEditId = null;
-  const modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+  let modal = null;
+  
+  // 等待 DOM 加载完成
+  document.addEventListener('DOMContentLoaded', function() {
+    modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+  });
 
   function openAddModal() {
     currentEditId = null;
@@ -130,19 +137,29 @@
     document.getElementById('categoryForm').reset();
     document.getElementById('categoryStatus').checked = true;
     updateIconPreview();
+    modal.show();
   }
 
-  function openEditModal(category) {
-    currentEditId = category.id;
-    document.getElementById('modalTitle').textContent = '编辑分类';
-    document.getElementById('categoryId').value = category.id;
-    document.getElementById('categoryName').value = category.name;
-    document.getElementById('categoryDescription').value = category.description || '';
-    document.getElementById('categoryIcon').value = category.icon || '';
-    document.getElementById('categorySortOrder').value = category.sort_order || 0;
-    document.getElementById('categoryStatus').checked = category.status !== 0;
-    updateIconPreview();
-    modal.show();
+  async function openEditModal(id) {
+    try {
+      const response = await fetch('/api/admin/categories/' + id);
+      const result = await response.json();
+      if (result.code !== 0) throw new Error(result.message);
+      
+      const category = result.data.category;
+      currentEditId = category.id;
+      document.getElementById('modalTitle').textContent = '编辑分类';
+      document.getElementById('categoryId').value = category.id;
+      document.getElementById('categoryName').value = category.name;
+      document.getElementById('categoryDescription').value = category.description || '';
+      document.getElementById('categoryIcon').value = category.icon || '';
+      document.getElementById('categorySortOrder').value = category.sort_order || 0;
+      document.getElementById('categoryStatus').checked = category.status !== 0;
+      updateIconPreview();
+      modal.show();
+    } catch (error) {
+      showAlert(error.message || '获取分类信息失败', 'danger');
+    }
   }
 
   function updateIconPreview() {
@@ -150,40 +167,42 @@
     document.getElementById('iconPreview').className = 'bi bi-' + icon;
   }
 
-  document.getElementById('categoryForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const data = {
-      name: formData.get('name'),
-      description: formData.get('description'),
-      icon: formData.get('icon'),
-      sort_order: parseInt(formData.get('sort_order')) || 0,
-      status: document.getElementById('categoryStatus').checked ? 1 : 0,
-    };
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('categoryForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const data = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        icon: formData.get('icon'),
+        sort_order: parseInt(formData.get('sort_order')) || 0,
+        status: document.getElementById('categoryStatus').checked ? 1 : 0,
+      };
 
-    try {
-      const url = currentEditId 
-        ? '/api/admin/categories/' + currentEditId
-        : '/api/admin/categories';
-      const method = currentEditId ? 'PUT' : 'POST';
+      try {
+        const url = currentEditId 
+          ? '/api/admin/categories/' + currentEditId
+          : '/api/admin/categories';
+        const method = currentEditId ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+        const response = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
 
-      const result = await response.json();
-      if (result.code !== 0) throw new Error(result.message);
+        const result = await response.json();
+        if (result.code !== 0) throw new Error(result.message);
 
-      modal.hide();
-      showAlert(currentEditId ? '分类已更新' : '分类已添加');
-      location.reload();
+        modal.hide();
+        showAlert(currentEditId ? '分类已更新' : '分类已添加');
+        location.reload();
 
-    } catch (error) {
-      showAlert(error.message || '操作失败', 'danger');
-    }
+      } catch (error) {
+        showAlert(error.message || '操作失败', 'danger');
+      }
+    });
   });
 
   async function toggleStatus(id, status) {
@@ -218,5 +237,3 @@
     });
   }
 </script>
-
-<%- include('partials/footer') %>

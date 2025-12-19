@@ -275,6 +275,8 @@
   }
 </style>
 
+<%- include('partials/footer') %>
+
 <script>
   const cards = <%- JSON.stringify(delivery?.cards || []) %>;
 
@@ -340,5 +342,3 @@
     }
   }
 </script>
-
-<%- include('partials/footer') %>

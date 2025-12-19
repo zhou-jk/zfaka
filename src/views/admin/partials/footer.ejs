@@ -3,6 +3,13 @@
 
   <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
   <script>
+    // 包装 fetch 确保包含 credentials
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options = {}) {
+      options.credentials = options.credentials || 'same-origin';
+      return originalFetch.call(this, url, options);
+    };
+
     // 侧边栏切换
     document.getElementById('sidebarToggle')?.addEventListener('click', function() {
       document.querySelector('.sidebar').classList.toggle('show');

@@ -157,6 +157,8 @@
   </div>
 </div>
 
+<%- include('partials/footer') %>
+
 <script>
   function showDetail(detail) {
     document.getElementById('detailContent').textContent = JSON.stringify(detail, null, 2);
@@ -179,5 +181,3 @@
     });
   }
 </script>
-
-<%- include('partials/footer') %>

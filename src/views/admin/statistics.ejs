@@ -156,7 +156,9 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<%- include('partials/footer') %>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
   let salesChart = null;
   let channelChart = null;
@@ -368,5 +370,3 @@
   // 初始加载7天数据
   loadData(7);
 </script>
-
-<%- include('partials/footer') %>

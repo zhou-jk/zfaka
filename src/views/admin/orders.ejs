@@ -179,6 +179,8 @@
   <% } %>
 </div>
 
+<%- include('partials/footer') %>
+
 <script>
   async function cancelOrder(id) {
     confirmDelete('确定要取消该订单吗？', async () => {
@@ -202,5 +204,3 @@
     window.location.href = '/api/admin/orders/export?' + params.toString();
   }
 </script>
-
-<%- include('partials/footer') %>

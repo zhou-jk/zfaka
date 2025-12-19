@@ -25,17 +25,28 @@ const logger = require('../../utils/logger');
 router.use(requireAdminAuth);
 
 // ========== 图片上传配置 ==========
+const uploadDir = path.join(__dirname, '../../../public/uploads/products');
+
+// 确保上传目录存在
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('Created upload directory:', uploadDir);
+  }
+} catch (err) {
+  console.error('Failed to create upload directory:', err);
+}
+
 const imageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../../../public/uploads/products');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
+    console.log('Upload destination:', uploadDir);
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    const filename = uniqueSuffix + path.extname(file.originalname);
+    console.log('Upload filename:', filename);
+    cb(null, filename);
   }
 });
 
@@ -75,7 +86,23 @@ const cardUpload = multer({
  * 创建商品
  * POST /api/admin/products
  */
-router.post('/products', imageUpload.single('image'), asyncHandler(async (req, res) => {
+router.post('/products', (req, res, next) => {
+  imageUpload.single('image')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      // Multer 错误
+      console.error('Multer error:', err);
+      return res.status(400).json({ code: 1, message: '文件上传失败: ' + err.message });
+    } else if (err) {
+      // 其他错误
+      console.error('Upload error:', err);
+      return res.status(400).json({ code: 1, message: err.message });
+    }
+    next();
+  });
+}, asyncHandler(async (req, res) => {
+  console.log('Creating product, body:', req.body);
+  console.log('Uploaded file:', req.file);
+  
   const data = { ...req.body };
   
   // 处理上传的图片
@@ -91,7 +118,18 @@ router.post('/products', imageUpload.single('image'), asyncHandler(async (req, r
  * 更新商品
  * PUT /api/admin/products/:id
  */
-router.put('/products/:id', imageUpload.single('image'), asyncHandler(async (req, res) => {
+router.put('/products/:id', (req, res, next) => {
+  imageUpload.single('image')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      console.error('Multer error:', err);
+      return res.status(400).json({ code: 1, message: '文件上传失败: ' + err.message });
+    } else if (err) {
+      console.error('Upload error:', err);
+      return res.status(400).json({ code: 1, message: err.message });
+    }
+    next();
+  });
+}, asyncHandler(async (req, res) => {
   const { id } = req.params;
   const data = { ...req.body };
   

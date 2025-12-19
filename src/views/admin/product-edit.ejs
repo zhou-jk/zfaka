@@ -178,6 +178,8 @@
   </div>
 </form>
 
+<%- include('partials/footer') %>
+
 <script>
   function previewImage(input) {
     if (input.files && input.files[0]) {
@@ -190,49 +192,50 @@
     }
   }
 
-  document.getElementById('productForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const btn = this.querySelector('button[type="submit"]');
-    const originalText = btn.innerHTML;
-    
-    try {
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>保存中...';
-
-      const formData = new FormData(this);
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('productForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
       
-      // 处理checkbox
-      formData.set('status', formData.has('status') && this.querySelector('#status').checked ? 1 : 0);
-      formData.set('is_hot', formData.has('is_hot') && this.querySelector('#is_hot').checked ? 1 : 0);
-      formData.set('is_recommend', formData.has('is_recommend') && this.querySelector('#is_recommend').checked ? 1 : 0);
+      const btn = this.querySelector('button[type="submit"]');
+      const originalText = btn.innerHTML;
+      
+      try {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>保存中...';
 
-      const isEdit = <%= product ? 'true' : 'false' %>;
-      const url = isEdit ? '/api/admin/products/<%= product?.id || '' %>' : '/api/admin/products';
-      const method = isEdit ? 'PUT' : 'POST';
+        const formData = new FormData(this);
+        
+        // 处理checkbox
+        formData.set('status', formData.has('status') && this.querySelector('#status').checked ? 1 : 0);
+        formData.set('is_hot', formData.has('is_hot') && this.querySelector('#is_hot').checked ? 1 : 0);
+        formData.set('is_recommend', formData.has('is_recommend') && this.querySelector('#is_recommend').checked ? 1 : 0);
 
-      const response = await fetch(url, {
-        method: method,
-        body: formData,
-      });
+        const isEdit = <%= product ? 'true' : 'false' %>;
+        const url = isEdit ? '/api/admin/products/<%= product?.id || '' %>' : '/api/admin/products';
+        const method = isEdit ? 'PUT' : 'POST';
 
-      const result = await response.json();
+        const response = await fetch(url, {
+          method: method,
+          body: formData,
+          credentials: 'same-origin',
+        });
 
-      if (result.code !== 0) {
-        throw new Error(result.message);
+        const result = await response.json();
+
+        if (result.code !== 0) {
+          throw new Error(result.message);
+        }
+
+        showAlert('<%= product ? '商品已更新' : '商品已添加' %>');
+        setTimeout(() => {
+          window.location.href = '/admin/products';
+        }, 1000);
+
+      } catch (error) {
+        showAlert(error.message || '保存失败', 'danger');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
       }
-
-      showAlert('<%= product ? '商品已更新' : '商品已添加' %>');
-      setTimeout(() => {
-        window.location.href = '/admin/products';
-      }, 1000);
-
-    } catch (error) {
-      showAlert(error.message || '保存失败', 'danger');
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-    }
+    });
   });
 </script>
-
-<%- include('partials/footer') %>
