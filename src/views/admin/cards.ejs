@@ -94,7 +94,8 @@
                 </td>
                 <td><%= card.id %></td>
                 <td>
-                  <code class="user-select-all"><%= card.content.length > 50 ? card.content.substring(0, 50) + '...' : card.content %></code>
+                  <% const cardContent = card.card_code || card.content || ''; %>
+                  <code class="user-select-all"><%= cardContent.length > 50 ? cardContent.substring(0, 50) + '...' : cardContent %></code>
                 </td>
                 <td><%= card.product_name || '-' %></td>
                 <td><small class="text-muted"><%= card.batch_no || '-' %></small></td>
