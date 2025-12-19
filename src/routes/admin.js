@@ -51,8 +51,9 @@ router.use(requireAdminAuth);
 
 /**
  * 后台首页（仪表盘）
+ * 同时支持 /admin 和 /admin/dashboard 两个路径
  */
-router.get('/', asyncHandler(async (req, res) => {
+router.get(['/', '/dashboard'], asyncHandler(async (req, res) => {
   const stats = await statisticsService.getDashboardStats();
   const trend = await statisticsService.getTrendData(7);
   const ranking = await statisticsService.getProductRanking(5, 30);
