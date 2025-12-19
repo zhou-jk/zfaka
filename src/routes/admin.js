@@ -250,6 +250,7 @@ router.post('/cards/:id/void', asyncHandler(async (req, res) => {
  */
 router.get('/orders', asyncHandler(async (req, res) => {
   const { page, limit } = parsePagination(req.query);
+  const productsResult = await productService.getProductListAdmin({ limit: 200, status: 1 });
   const result = await orderService.getOrderList({
     page,
     limit,
@@ -260,6 +261,7 @@ router.get('/orders', asyncHandler(async (req, res) => {
     title: '订单管理',
     orders: result.data,
     pagination: result.pagination,
+    products: productsResult.data,
     query: req.query,
   });
 }));
