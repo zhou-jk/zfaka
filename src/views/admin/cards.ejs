@@ -54,13 +54,13 @@
   <div class="card-body py-2">
     <div class="d-flex align-items-center">
       <span class="text-muted me-3">已选择 <span id="selectedCount">0</span> 项</span>
-      <button type="button" class="btn btn-sm btn-outline-warning me-2" onclick="batchVoid()">
+      <button type="button" class="btn btn-sm btn-outline-warning me-2" id="batchVoidBtn">
         <i class="bi bi-x-circle me-1"></i>批量作废
       </button>
-      <button type="button" class="btn btn-sm btn-outline-danger me-2" onclick="batchDelete()">
+      <button type="button" class="btn btn-sm btn-outline-danger me-2" id="batchDeleteBtn">
         <i class="bi bi-trash me-1"></i>批量删除
       </button>
-      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSelectionBtn">
         取消选择
       </button>
     </div>
@@ -75,7 +75,7 @@
         <thead class="table-light">
           <tr>
             <th width="40">
-              <input type="checkbox" class="form-check-input" id="selectAll" onchange="toggleSelectAll(this.checked)">
+              <input type="checkbox" class="form-check-input" id="selectAll">
             </th>
             <th width="60">ID</th>
             <th>卡密内容</th>
@@ -93,7 +93,7 @@
               <tr>
                 <td>
                   <input type="checkbox" class="form-check-input card-checkbox" value="<%= card.id %>" 
-                         onchange="updateSelection()" <%= card.status !== 0 ? 'disabled' : '' %>>
+                         <%= card.status !== 0 ? 'disabled' : '' %>>
                 </td>
                 <td><%= card.id %></td>
                 <td>
@@ -120,15 +120,15 @@
                 <td><%= new Date(card.created_at).toLocaleString('zh-CN') %></td>
                 <td>
                   <div class="btn-group btn-group-sm">
-                    <button type="button" class="btn btn-outline-primary" title="复制卡密" onclick="copyCard(this)" data-code="<%= (card.card_code || '').replace(/"/g, '&quot;') %>">
+                    <button type="button" class="btn btn-outline-primary btn-copy" title="复制卡密" data-code="<%= (card.card_code || '').replace(/"/g, '&quot;') %>">
                       <i class="bi bi-clipboard"></i>
                     </button>
                     <% if (card.status === 0) { %>
-                      <button type="button" class="btn btn-outline-warning" title="作废" onclick="voidCard(<%= card.id %>)">
+                      <button type="button" class="btn btn-outline-warning btn-void" title="作废" data-id="<%= card.id %>">
                         <i class="bi bi-x-circle"></i>
                       </button>
                     <% } %>
-                    <button type="button" class="btn btn-outline-danger" title="删除" onclick="deleteCard(<%= card.id %>)">
+                    <button type="button" class="btn btn-outline-danger btn-delete" title="删除" data-id="<%= card.id %>">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -175,101 +175,136 @@
 <%- include('partials/footer') %>
 
 <script>
-  let selectedIds = [];
-
-  function toggleSelectAll(checked) {
-    document.querySelectorAll('.card-checkbox:not(:disabled)').forEach(cb => {
-      cb.checked = checked;
-    });
-    updateSelection();
-  }
-
-  function updateSelection() {
-    selectedIds = Array.from(document.querySelectorAll('.card-checkbox:checked')).map(cb => parseInt(cb.value));
-    document.getElementById('selectedCount').textContent = selectedIds.length;
-    document.getElementById('batchActions').classList.toggle('d-none', selectedIds.length === 0);
-  }
-
-  function clearSelection() {
-    document.querySelectorAll('.card-checkbox').forEach(cb => cb.checked = false);
-    document.getElementById('selectAll').checked = false;
-    updateSelection();
-  }
-
-  function copyCard(btn) {
-    const content = btn.dataset.code || '';
-    navigator.clipboard.writeText(content).then(() => {
-      showAlert('已复制到剪贴板');
-    });
-  }
-
-  async function voidCard(id) {
-    confirmDelete('确定要作废该卡密吗？作废后无法恢复。', async () => {
-      try {
-        const response = await fetch('/api/admin/cards/' + id + '/void', {
-          method: 'POST',
+  document.addEventListener('DOMContentLoaded', function() {
+    let selectedIds = [];
+    
+    // 全选复选框
+    const selectAllCheckbox = document.getElementById('selectAll');
+    if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener('change', function() {
+        document.querySelectorAll('.card-checkbox:not(:disabled)').forEach(cb => {
+          cb.checked = this.checked;
         });
-        const result = await response.json();
-        if (result.code !== 0) throw new Error(result.message);
-        showAlert('卡密已作废');
-        location.reload();
-      } catch (error) {
-        showAlert(error.message || '操作失败', 'danger');
-      }
+        updateSelection();
+      });
+    }
+    
+    // 单个复选框
+    document.querySelectorAll('.card-checkbox').forEach(cb => {
+      cb.addEventListener('change', updateSelection);
     });
-  }
-
-  async function batchVoid() {
-    if (selectedIds.length === 0) return;
-    confirmDelete('确定要作废选中的 ' + selectedIds.length + ' 张卡密吗？', async () => {
-      try {
-        const response = await fetch('/api/admin/cards/batch-void', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids: selectedIds }),
+    
+    // 更新选中状态
+    function updateSelection() {
+      selectedIds = Array.from(document.querySelectorAll('.card-checkbox:checked')).map(cb => parseInt(cb.value));
+      document.getElementById('selectedCount').textContent = selectedIds.length;
+      document.getElementById('batchActions').classList.toggle('d-none', selectedIds.length === 0);
+    }
+    
+    // 取消选择
+    const clearBtn = document.getElementById('clearSelectionBtn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function() {
+        document.querySelectorAll('.card-checkbox').forEach(cb => cb.checked = false);
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        updateSelection();
+      });
+    }
+    
+    // 复制卡密
+    document.querySelectorAll('.btn-copy').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const content = this.dataset.code || '';
+        navigator.clipboard.writeText(content).then(() => {
+          showAlert('已复制到剪贴板');
         });
-        const result = await response.json();
-        if (result.code !== 0) throw new Error(result.message);
-        showAlert('批量作废成功');
-        location.reload();
-      } catch (error) {
-        showAlert(error.message || '操作失败', 'danger');
-      }
+      });
     });
-  }
-
-  async function deleteCard(id) {
-    confirmDelete('确定要删除该卡密吗？删除后无法恢复。', async () => {
-      try {
-        const response = await fetch('/api/admin/cards/' + id, {
-          method: 'DELETE',
+    
+    // 作废卡密
+    document.querySelectorAll('.btn-void').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.dataset.id;
+        confirmDelete('确定要作废该卡密吗？作废后无法恢复。', async () => {
+          try {
+            const response = await fetch('/api/admin/cards/' + id + '/void', {
+              method: 'POST',
+            });
+            const result = await response.json();
+            if (result.code !== 0) throw new Error(result.message);
+            showAlert('卡密已作废');
+            location.reload();
+          } catch (error) {
+            showAlert(error.message || '操作失败', 'danger');
+          }
         });
-        const result = await response.json();
-        if (result.code !== 0) throw new Error(result.message);
-        showAlert('卡密已删除');
-        location.reload();
-      } catch (error) {
-        showAlert(error.message || '操作失败', 'danger');
-      }
+      });
     });
-  }
-
-  async function batchDelete() {
-    if (selectedIds.length === 0) return;
-    confirmDelete('确定要删除选中的 ' + selectedIds.length + ' 张卡密吗？', async () => {
-      try {
-        const response = await fetch('/api/admin/cards/batch-delete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids: selectedIds }),
+    
+    // 删除卡密
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.dataset.id;
+        confirmDelete('确定要删除该卡密吗？删除后无法恢复。', async () => {
+          try {
+            const response = await fetch('/api/admin/cards/' + id, {
+              method: 'DELETE',
+            });
+            const result = await response.json();
+            if (result.code !== 0) throw new Error(result.message);
+            showAlert('卡密已删除');
+            location.reload();
+          } catch (error) {
+            showAlert(error.message || '操作失败', 'danger');
+          }
         });
-        const result = await response.json();
-        if (result.code !== 0) throw new Error(result.message);
-        showAlert('批量删除成功');
-        location.reload();
-      } catch (error) {
-        showAlert(error.message || '操作失败', 'danger');
-      }
+      });
     });
-  }
+    
+    // 批量作废
+    const batchVoidBtn = document.getElementById('batchVoidBtn');
+    if (batchVoidBtn) {
+      batchVoidBtn.addEventListener('click', function() {
+        if (selectedIds.length === 0) return;
+        confirmDelete('确定要作废选中的 ' + selectedIds.length + ' 张卡密吗？', async () => {
+          try {
+            const response = await fetch('/api/admin/cards/batch-void', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ids: selectedIds }),
+            });
+            const result = await response.json();
+            if (result.code !== 0) throw new Error(result.message);
+            showAlert('批量作废成功');
+            location.reload();
+          } catch (error) {
+            showAlert(error.message || '操作失败', 'danger');
+          }
+        });
+      });
+    }
+    
+    // 批量删除
+    const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+    if (batchDeleteBtn) {
+      batchDeleteBtn.addEventListener('click', function() {
+        if (selectedIds.length === 0) return;
+        confirmDelete('确定要删除选中的 ' + selectedIds.length + ' 张卡密吗？', async () => {
+          try {
+            const response = await fetch('/api/admin/cards/batch-delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ids: selectedIds }),
+            });
+            const result = await response.json();
+            if (result.code !== 0) throw new Error(result.message);
+            showAlert('批量删除成功');
+            location.reload();
+          } catch (error) {
+            showAlert(error.message || '操作失败', 'danger');
+          }
+        });
+      });
+    }
+  });
 </script>
