@@ -37,11 +37,11 @@
       <div class="col-md-2">
         <select class="form-select" name="status">
           <option value="">全部状态</option>
-          <option value="pending" <%= query?.status === 'pending' ? 'selected' : '' %>>待支付</option>
-          <option value="paid" <%= query?.status === 'paid' ? 'selected' : '' %>>已支付</option>
-          <option value="delivered" <%= query?.status === 'delivered' ? 'selected' : '' %>>已发货</option>
-          <option value="cancelled" <%= query?.status === 'cancelled' ? 'selected' : '' %>>已取消</option>
-          <option value="refunded" <%= query?.status === 'refunded' ? 'selected' : '' %>>已退款</option>
+          <option value="0" <%= query?.status === '0' ? 'selected' : '' %>>待支付</option>
+          <option value="2" <%= query?.status === '2' ? 'selected' : '' %>>已支付</option>
+          <option value="3" <%= query?.status === '3' ? 'selected' : '' %>>已完成</option>
+          <option value="5" <%= query?.status === '5' ? 'selected' : '' %>>已取消</option>
+          <option value="6" <%= query?.status === '6' ? 'selected' : '' %>>已退款</option>
         </select>
       </div>
       <div class="col-md-2">
@@ -122,8 +122,10 @@
                   <% } %>
                 </td>
                 <td>
-                  <span class="badge bg-<%= order.status === 'delivered' ? 'success' : order.status === 'paid' ? 'info' : order.status === 'pending' ? 'warning' : order.status === 'cancelled' ? 'secondary' : 'danger' %>">
-                    <%= order.status === 'delivered' ? '已发货' : order.status === 'paid' ? '已支付' : order.status === 'pending' ? '待支付' : order.status === 'cancelled' ? '已取消' : '已退款' %>
+                  <%# order_status: 0=待支付, 1=支付中, 2=已支付, 3=已完成, 4=待人工处理, 5=已取消, 6=已退款 %>
+                  <% const orderStatus = order.order_status; %>
+                  <span class="badge bg-<%= orderStatus === 3 ? 'success' : orderStatus === 2 ? 'info' : orderStatus === 0 ? 'warning' : orderStatus === 5 ? 'secondary' : 'danger' %>">
+                    <%= orderStatus === 0 ? '待支付' : orderStatus === 1 ? '支付中' : orderStatus === 2 ? '已支付' : orderStatus === 3 ? '已完成' : orderStatus === 4 ? '待处理' : orderStatus === 5 ? '已取消' : '已退款' %>
                   </span>
                 </td>
                 <td><%= order.email || '-' %></td>
@@ -133,7 +135,7 @@
                     <a href="/admin/orders/<%= order.id %>" class="btn btn-outline-primary" title="详情">
                       <i class="bi bi-eye"></i>
                     </a>
-                    <% if (order.status === 'pending') { %>
+                    <% if (order.order_status === 0) { %>
                       <button type="button" class="btn btn-outline-secondary" title="取消" onclick="cancelOrder(<%= order.id %>)">
                         <i class="bi bi-x-circle"></i>
                       </button>

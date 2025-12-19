@@ -12,10 +12,11 @@
   <div class="row">
     <div class="col-lg-8">
       <!-- 订单状态 -->
+      <!-- order_status: 0=待支付, 1=支付中, 2=已支付, 3=已完成, 4=待人工处理, 5=已取消, 6=已退款 -->
       <div class="card mb-4">
         <div class="card-body">
           <div class="d-flex align-items-center">
-            ${order.status === 'pending' ? `
+            ${order.order_status === 0 ? `
               <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
                 <i class="bi bi-clock text-white fs-3"></i>
               </div>
@@ -23,7 +24,7 @@
                 <h4 class="mb-1">等待支付</h4>
                 <p class="text-muted mb-0">请在15分钟内完成支付，超时订单将自动取消</p>
               </div>
-            ` : order.status === 'paid' ? `
+            ` : order.order_status === 1 || order.order_status === 2 ? `
               <div class="rounded-circle bg-info d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
                 <i class="bi bi-check-lg text-white fs-3"></i>
               </div>
@@ -31,7 +32,7 @@
                 <h4 class="mb-1">支付成功</h4>
                 <p class="text-muted mb-0">系统正在处理中，请稍候...</p>
               </div>
-            ` : order.status === 'delivered' ? `
+            ` : order.order_status === 3 ? `
               <div class="rounded-circle bg-success d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
                 <i class="bi bi-check-all text-white fs-3"></i>
               </div>
@@ -39,7 +40,7 @@
                 <h4 class="mb-1">发货成功</h4>
                 <p class="text-muted mb-0">卡密信息已生成，请查看下方详情</p>
               </div>
-            ` : order.status === 'cancelled' ? `
+            ` : order.order_status === 5 ? `
               <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
                 <i class="bi bi-x-lg text-white fs-3"></i>
               </div>
@@ -47,7 +48,7 @@
                 <h4 class="mb-1">订单已取消</h4>
                 <p class="text-muted mb-0">订单已取消，如有疑问请联系客服</p>
               </div>
-            ` : order.status === 'refunded' ? `
+            ` : order.order_status === 6 ? `
               <div class="rounded-circle bg-danger d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
                 <i class="bi bi-arrow-counterclockwise text-white fs-3"></i>
               </div>
@@ -55,13 +56,21 @@
                 <h4 class="mb-1">已退款</h4>
                 <p class="text-muted mb-0">订单已退款，款项将原路返回</p>
               </div>
+            ` : order.order_status === 4 ? `
+              <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                <i class="bi bi-exclamation-triangle text-white fs-3"></i>
+              </div>
+              <div class="ms-3">
+                <h4 class="mb-1">待人工处理</h4>
+                <p class="text-muted mb-0">订单需要人工处理，请联系客服</p>
+              </div>
             ` : ''}
           </div>
         </div>
       </div>
 
       <!-- 卡密信息 -->
-      ${order.status === 'delivered' && delivery && delivery.cards ? `
+      ${order.order_status === 3 && order.cards && order.cards.length > 0 ? `
       <div class="card mb-4 border-success">
         <div class="card-header bg-success text-white">
           <h5 class="mb-0"><i class="bi bi-key me-2"></i>卡密信息</h5>
@@ -81,11 +90,12 @@
                 </tr>
               </thead>
               <tbody>
-                ${delivery.cards.map((card, index) => `
+                ${order.cards.map((card, index) => `
                   <tr>
                     <td>${index + 1}</td>
                     <td>
-                      <code class="user-select-all" id="card-${index}">${card.content}</code>
+                      <code class="user-select-all" id="card-${index}">${card.card_code || card.content || ''}</code>
+                      ${card.card_secret ? `<br><small class="text-muted">密钥: ${card.card_secret}</small>` : ''}
                     </td>
                     <td>
                       <button class="btn btn-sm btn-outline-primary" onclick="copyCard(${index})">
@@ -107,7 +117,7 @@
       ` : ''}
 
       <!-- 待支付操作 -->
-      ${order.status === 'pending' ? `
+      ${order.order_status === 0 ? `
       <div class="card mb-4">
         <div class="card-header">
           <h5 class="mb-0">选择支付方式</h5>
@@ -149,20 +159,20 @@
               <td class="text-muted">订单金额</td>
               <td class="text-danger fw-bold fs-5">¥${parseFloat(order.total_amount).toFixed(2)}</td>
             </tr>
-            ${order.email ? `
+            ${order.buyer_email ? `
             <tr>
               <td class="text-muted">联系邮箱</td>
-              <td>${order.email}</td>
+              <td>${order.buyer_email}</td>
             </tr>
             ` : ''}
             <tr>
               <td class="text-muted">创建时间</td>
               <td>${new Date(order.created_at).toLocaleString()}</td>
             </tr>
-            ${order.paid_at ? `
+            ${order.pay_time ? `
             <tr>
               <td class="text-muted">支付时间</td>
-              <td>${new Date(order.paid_at).toLocaleString()}</td>
+              <td>${new Date(order.pay_time).toLocaleString()}</td>
             </tr>
             ` : ''}
           </table>
@@ -233,17 +243,18 @@
 </div>
 
 <script>
-  const cards = ${JSON.stringify(delivery?.cards || [])};
+  const cards = ${JSON.stringify(order.cards || [])};
   
   function copyCard(index) {
-    const text = document.getElementById('card-' + index).textContent;
+    const card = cards[index];
+    const text = card.card_code || card.content || '';
     navigator.clipboard.writeText(text).then(() => {
       alert('复制成功');
     });
   }
 
   function copyAllCards() {
-    const text = cards.map(c => c.content).join('\\n');
+    const text = cards.map(c => c.card_code || c.content || '').join('\\n');
     navigator.clipboard.writeText(text).then(() => {
       alert('全部卡密已复制到剪贴板');
     });
@@ -273,12 +284,16 @@
   }
 
   // 待支付订单自动刷新检查状态
-  ${order.status === 'pending' || order.status === 'paid' ? `
+  ${order.order_status === 0 || order.order_status === 1 || order.order_status === 2 ? `
   setInterval(async () => {
-    const response = await fetch('/api/orders/${order.order_no}/status');
-    const result = await response.json();
-    if (result.code === 0 && result.data.status !== '${order.status}') {
-      location.reload();
+    try {
+      const response = await fetch('/api/orders/${order.order_no}/status');
+      const result = await response.json();
+      if (result.code === 0 && result.data.order_status !== ${order.order_status}) {
+        location.reload();
+      }
+    } catch (e) {
+      console.error('检查状态失败', e);
     }
   }, 5000);
   ` : ''}
