@@ -9,7 +9,7 @@
     <h4 class="mb-0">商品分类</h4>
     <small class="text-muted">管理商品分类</small>
   </div>
-  <button type="button" class="btn btn-primary" onclick="openAddModal()">
+  <button type="button" class="btn btn-primary" id="addCategoryBtn">
     <i class="bi bi-plus-lg me-2"></i>添加分类
   </button>
 </div>
@@ -44,18 +44,18 @@
               <td><%= c.sort_order || 0 %></td>
               <td>
                 <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" <%= c.status ? 'checked' : '' %> 
-                         onchange="toggleStatus(<%= c.id %>, this.checked)">
+                  <input class="form-check-input status-toggle" type="checkbox" <%= c.status ? 'checked' : '' %> 
+                         data-id="<%= c.id %>">
                 </div>
               </td>
               <td>
                 <div class="btn-group btn-group-sm">
-                  <button type="button" class="btn btn-outline-primary" title="编辑" 
-                          onclick="openEditModal(<%= c.id %>)">
+                  <button type="button" class="btn btn-outline-primary btn-edit" title="编辑" 
+                          data-id="<%= c.id %>">
                     <i class="bi bi-pencil"></i>
                   </button>
-                  <button type="button" class="btn btn-outline-danger" title="删除" 
-                          onclick="deleteCategory(<%= c.id %>)" <%= c.product_count > 0 ? 'disabled' : '' %>>
+                  <button type="button" class="btn btn-outline-danger btn-delete" title="删除" 
+                          data-id="<%= c.id %>" <%= c.product_count > 0 ? 'disabled' : '' %>>
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -97,7 +97,7 @@
               <label class="form-label">图标</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi" id="iconPreview"></i></span>
-                <input type="text" class="form-control" name="icon" id="categoryIcon" placeholder="folder" onchange="updateIconPreview()">
+                <input type="text" class="form-control" name="icon" id="categoryIcon" placeholder="folder">
               </div>
               <small class="text-muted">Bootstrap Icons 名称</small>
             </div>
@@ -126,10 +126,10 @@
   let currentEditId = null;
   let modal = null;
   
-  // 等待 DOM 加载完成
-  document.addEventListener('DOMContentLoaded', function() {
-    modal = new bootstrap.Modal(document.getElementById('categoryModal'));
-  });
+  function updateIconPreview() {
+    const icon = document.getElementById('categoryIcon').value || 'folder';
+    document.getElementById('iconPreview').className = 'bi bi-' + icon;
+  }
 
   function openAddModal() {
     currentEditId = null;
@@ -162,12 +162,74 @@
     }
   }
 
-  function updateIconPreview() {
-    const icon = document.getElementById('categoryIcon').value || 'folder';
-    document.getElementById('iconPreview').className = 'bi bi-' + icon;
+  async function toggleStatus(id, status) {
+    try {
+      const response = await fetch('/api/admin/categories/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status ? 1 : 0 }),
+      });
+      const result = await response.json();
+      if (result.code !== 0) throw new Error(result.message);
+      showAlert(status ? '分类已启用' : '分类已禁用');
+    } catch (error) {
+      showAlert(error.message || '操作失败', 'danger');
+      location.reload();
+    }
   }
 
+  async function deleteCategory(id) {
+    confirmDelete('确定要删除该分类吗？', async function() {
+      try {
+        const response = await fetch('/api/admin/categories/' + id, {
+          method: 'DELETE',
+        });
+        const result = await response.json();
+        if (result.code !== 0) throw new Error(result.message);
+        showAlert('分类已删除');
+        location.reload();
+      } catch (error) {
+        showAlert(error.message || '删除失败', 'danger');
+      }
+    });
+  }
+
+  // 等待 DOM 加载完成
   document.addEventListener('DOMContentLoaded', function() {
+    modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+    
+    // 添加分类按钮
+    document.getElementById('addCategoryBtn').addEventListener('click', function() {
+      openAddModal();
+    });
+    
+    // 图标输入框
+    document.getElementById('categoryIcon').addEventListener('input', function() {
+      updateIconPreview();
+    });
+    
+    // 编辑按钮
+    document.querySelectorAll('.btn-edit').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        openEditModal(parseInt(this.dataset.id));
+      });
+    });
+    
+    // 删除按钮
+    document.querySelectorAll('.btn-delete').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        deleteCategory(parseInt(this.dataset.id));
+      });
+    });
+    
+    // 状态开关
+    document.querySelectorAll('.status-toggle').forEach(function(toggle) {
+      toggle.addEventListener('change', function() {
+        toggleStatus(parseInt(this.dataset.id), this.checked);
+      });
+    });
+    
+    // 表单提交
     document.getElementById('categoryForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
@@ -204,36 +266,4 @@
       }
     });
   });
-
-  async function toggleStatus(id, status) {
-    try {
-      const response = await fetch('/api/admin/categories/' + id, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: status ? 1 : 0 }),
-      });
-      const result = await response.json();
-      if (result.code !== 0) throw new Error(result.message);
-      showAlert(status ? '分类已启用' : '分类已禁用');
-    } catch (error) {
-      showAlert(error.message || '操作失败', 'danger');
-      location.reload();
-    }
-  }
-
-  async function deleteCategory(id) {
-    confirmDelete('确定要删除该分类吗？', async () => {
-      try {
-        const response = await fetch('/api/admin/categories/' + id, {
-          method: 'DELETE',
-        });
-        const result = await response.json();
-        if (result.code !== 0) throw new Error(result.message);
-        showAlert('分类已删除');
-        location.reload();
-      } catch (error) {
-        showAlert(error.message || '删除失败', 'danger');
-      }
-    });
-  }
 </script>
