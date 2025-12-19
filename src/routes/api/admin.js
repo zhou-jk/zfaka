@@ -222,8 +222,24 @@ router.delete('/categories/:id', asyncHandler(async (req, res) => {
  * 导入卡密
  * POST /api/admin/cards/import
  */
-router.post('/cards/import', cardUpload.single('file'), asyncHandler(async (req, res) => {
-  const { productId, cards_text, skip_duplicate } = req.body;
+router.post('/cards/import', (req, res, next) => {
+  cardUpload.single('file')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      console.error('Multer error:', err);
+      return res.status(400).json({ code: 1, message: '文件上传失败: ' + err.message });
+    } else if (err) {
+      console.error('Upload error:', err);
+      return res.status(400).json({ code: 1, message: err.message });
+    }
+    next();
+  });
+}, asyncHandler(async (req, res) => {
+  // 支持两种字段名：product_id 和 productId
+  const productId = req.body.product_id || req.body.productId;
+  const cardsText = req.body.cards_text || req.body.cardsText;
+  const skipDuplicate = req.body.skip_duplicate || req.body.skipDuplicate;
+  
+  console.log('Card import request:', { productId, hasFile: !!req.file, hasText: !!cardsText });
   
   let lines = [];
   
@@ -232,9 +248,11 @@ router.post('/cards/import', cardUpload.single('file'), asyncHandler(async (req,
     // 文件上传方式
     const content = req.file.buffer.toString('utf8');
     lines = content.split(/\r?\n/).filter(line => line.trim());
-  } else if (cards_text) {
+    console.log('File content lines:', lines.length);
+  } else if (cardsText) {
     // 文本输入方式
-    lines = cards_text.split(/\r?\n/).filter(line => line.trim());
+    lines = cardsText.split(/\r?\n/).filter(line => line.trim());
+    console.log('Text input lines:', lines.length);
   } else {
     return fail(res, { code: 1001, message: '请上传卡密文件或输入卡密内容' });
   }
@@ -247,10 +265,19 @@ router.post('/cards/import', cardUpload.single('file'), asyncHandler(async (req,
     return fail(res, { code: 1001, message: '请选择商品' });
   }
   
+  // 解析卡密（支持多种格式：纯卡密、卡密,卡密密钥）
+  const cards = lines.map(line => {
+    const parts = line.split(/[,\t|]/).map(p => p.trim());
+    return {
+      code: parts[0],
+      secret: parts[1] || null,
+    };
+  }).filter(card => card.code);
+  
   // 导入卡密
   const result = await cardService.importCards(
-    productId,
-    lines,
+    parseInt(productId),
+    cards,
     req.session.user.id,
     req.file?.originalname || '手动输入'
   );
