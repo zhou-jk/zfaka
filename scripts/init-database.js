@@ -6,6 +6,7 @@
 require('dotenv').config();
 
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcryptjs');
 
 const config = {
   host: process.env.DB_HOST || 'localhost',
@@ -316,9 +317,7 @@ CREATE TABLE \`statistics_daily\` (
 -- 初始化默认数据
 -- =====================================================
 
--- 默认管理员账号 (密码: admin123)
-INSERT INTO \`sys_user\` (\`username\`, \`password_hash\`, \`role\`, \`email\`, \`status\`) VALUES
-('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 1, 'admin@example.com', 1);
+-- 默认管理员账号将通过代码动态创建
 
 -- 默认分类
 INSERT INTO \`product_category\` (\`name\`, \`sort_order\`, \`status\`) VALUES
@@ -351,10 +350,20 @@ async function initDatabase() {
     console.log('正在创建数据库和表...');
     await connection.query(createTableSQL);
     
+    // 动态生成密码哈希并创建管理员账号
+    console.log('正在创建默认管理员账号...');
+    const passwordHash = await bcrypt.hash('admin123', 10);
+    await connection.query(
+      `INSERT INTO \`${DB_NAME}\`.\`sys_user\` (\`username\`, \`password_hash\`, \`role\`, \`email\`, \`status\`) VALUES (?, ?, 1, 'admin@example.com', 1) ON DUPLICATE KEY UPDATE password_hash = ?`,
+      ['admin', passwordHash, passwordHash]
+    );
+    
+    console.log('\n========================================');
     console.log('数据库初始化成功！');
     console.log(`数据库名: ${DB_NAME}`);
     console.log('默认管理员账号: admin');
     console.log('默认管理员密码: admin123');
+    console.log('========================================\n');
     
   } catch (error) {
     console.error('数据库初始化失败:', error.message);
