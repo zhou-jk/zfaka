@@ -9,7 +9,7 @@
     <h4 class="mb-0">操作日志</h4>
     <small class="text-muted">查看系统操作记录</small>
   </div>
-  <button type="button" class="btn btn-outline-danger" onclick="clearLogs()">
+  <button type="button" class="btn btn-outline-danger" id="clearLogsBtn">
     <i class="bi bi-trash me-2"></i>清空日志
   </button>
 </div>
@@ -96,7 +96,7 @@
                 <td><%= new Date(log.created_at).toLocaleString('zh-CN') %></td>
                 <td>
                   <% if (log.detail) { %>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick='showDetail(<%- JSON.stringify(log.detail) %>)'>
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-view-detail" data-detail="<%= encodeURIComponent(JSON.stringify(log.detail)) %>">
                       <i class="bi bi-eye"></i>
                     </button>
                   <% } else { %>
@@ -160,13 +160,18 @@
 <%- include('partials/footer') %>
 
 <script>
-  function showDetail(detail) {
-    document.getElementById('detailContent').textContent = JSON.stringify(detail, null, 2);
-    new bootstrap.Modal(document.getElementById('detailModal')).show();
-  }
+  // 查看详情按钮
+  document.querySelectorAll('.btn-view-detail').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const detail = JSON.parse(decodeURIComponent(this.dataset.detail));
+      document.getElementById('detailContent').textContent = JSON.stringify(detail, null, 2);
+      new bootstrap.Modal(document.getElementById('detailModal')).show();
+    });
+  });
 
-  async function clearLogs() {
-    confirmDelete('确定要清空所有日志吗？此操作不可恢复。', async () => {
+  // 清空日志按钮
+  document.getElementById('clearLogsBtn').addEventListener('click', function() {
+    confirmDelete('确定要清空所有日志吗？此操作不可恢复。', async function() {
       try {
         const response = await fetch('/api/admin/logs/clear', {
           method: 'POST',
@@ -179,5 +184,5 @@
         showAlert(error.message || '操作失败', 'danger');
       }
     });
-  }
+  });
 </script>

@@ -217,24 +217,60 @@ class StatisticsService {
    * 获取操作日志列表
    */
   async getOperationLogs(params = {}) {
-    const { page = 1, limit = 20, operator_id, op_type, start_date, end_date } = params;
+    const { page = 1, limit = 20, operator, module, action, start_date, end_date } = params;
     
     let sql = `
-      SELECT l.*, u.username as operator_username
+      SELECT 
+        l.id,
+        l.op_type as action,
+        l.target_type as module,
+        l.target_id,
+        l.content as detail,
+        l.ip,
+        l.created_at,
+        u.username as operator,
+        CONCAT(
+          CASE l.target_type 
+            WHEN 'user' THEN '用户'
+            WHEN 'product' THEN '商品'
+            WHEN 'card' THEN '卡密'
+            WHEN 'order' THEN '订单'
+            WHEN 'payment' THEN '支付'
+            ELSE '系统'
+          END,
+          ' - ',
+          CASE l.op_type
+            WHEN 'create' THEN '创建'
+            WHEN 'update' THEN '更新'
+            WHEN 'delete' THEN '删除'
+            WHEN 'login' THEN '登录'
+            WHEN 'logout' THEN '登出'
+            WHEN 'import' THEN '导入'
+            WHEN 'void' THEN '作废'
+            WHEN 'restore' THEN '恢复'
+            ELSE l.op_type
+          END,
+          CASE WHEN l.target_id IS NOT NULL AND l.target_id != '' THEN CONCAT(' #', l.target_id) ELSE '' END
+        ) as description
       FROM operation_log l
       LEFT JOIN sys_user u ON l.operator_id = u.id
       WHERE 1=1
     `;
     const sqlParams = [];
     
-    if (operator_id) {
-      sql += ' AND l.operator_id = ?';
-      sqlParams.push(operator_id);
+    if (operator) {
+      sql += ' AND u.username LIKE ?';
+      sqlParams.push('%' + operator + '%');
     }
     
-    if (op_type) {
+    if (module) {
+      sql += ' AND l.target_type = ?';
+      sqlParams.push(module);
+    }
+    
+    if (action) {
       sql += ' AND l.op_type = ?';
-      sqlParams.push(op_type);
+      sqlParams.push(action);
     }
     
     if (start_date) {
