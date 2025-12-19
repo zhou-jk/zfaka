@@ -109,8 +109,18 @@ class RedisClient {
    * 删除缓存
    * @param {string} key 键
    */
-  async del(key) {
-    await this.client.del(key);
+  async del(...keys) {
+    if (keys.length > 0) {
+      await this.client.del(...keys);
+    }
+  }
+
+  /**
+   * 获取匹配的所有键
+   * @param {string} pattern 模式
+   */
+  async keys(pattern) {
+    return await this.client.keys(pattern);
   }
 
   /**

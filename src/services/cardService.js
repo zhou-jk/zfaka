@@ -312,33 +312,34 @@ class CardService {
    * 导出卡密
    */
   async exportCards(params = {}) {
-    const { product_id, batch_id, status } = params;
+    const { productId, status } = params;
     
     let sql = `
-      SELECT c.card_code, c.card_secret, c.status, c.created_at,
-             p.name as product_name
+      SELECT c.card_code as card_no, c.card_secret, c.status, c.created_at,
+             p.name as product_name,
+             CASE c.status
+               WHEN 0 THEN '未使用'
+               WHEN 1 THEN '已使用'
+               WHEN 2 THEN '已作废'
+               ELSE '未知'
+             END as status_text
       FROM card_code c
       LEFT JOIN product p ON c.product_id = p.id
       WHERE 1=1
     `;
     const sqlParams = [];
     
-    if (product_id) {
+    if (productId) {
       sql += ' AND c.product_id = ?';
-      sqlParams.push(product_id);
+      sqlParams.push(productId);
     }
     
-    if (batch_id) {
-      sql += ' AND c.batch_id = ?';
-      sqlParams.push(batch_id);
-    }
-    
-    if (status !== undefined) {
+    if (status !== undefined && status !== '' && status !== null) {
       sql += ' AND c.status = ?';
       sqlParams.push(status);
     }
     
-    sql += ' ORDER BY c.id ASC';
+    sql += ' ORDER BY c.id ASC LIMIT 10000';
     
     return await db.query(sql, sqlParams);
   }

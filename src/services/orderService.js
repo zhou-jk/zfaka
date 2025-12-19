@@ -609,6 +609,166 @@ class OrderService {
     
     return await db.queryOne(sql, [startDate, endDate + ' 23:59:59']);
   }
+  
+  /**
+   * 订单退款
+   */
+  async refundOrder(orderId, amount, reason, operatorId) {
+    const order = await db.queryOne('SELECT * FROM order_main WHERE id = ?', [orderId]);
+    
+    if (!order) {
+      throw new BusinessError(ErrorCodes.ORDER_NOT_FOUND);
+    }
+    
+    if (order.order_status !== OrderStatus.COMPLETED) {
+      throw new BusinessError({
+        code: 5041,
+        message: '只有已完成的订单才能退款',
+      });
+    }
+    
+    const refundAmount = amount || order.paid_amount || order.total_amount;
+    
+    // 订单状态 6 = 已退款
+    await db.update('order_main', {
+      order_status: 6,
+      admin_remark: `退款金额: ${refundAmount}元, 原因: ${reason || '管理员退款'}`,
+      closed_at: new Date(),
+    }, { id: orderId });
+    
+    await logger.logOperation(operatorId, 'ORDER_REFUND', 'order', orderId, {
+      order_no: order.order_no,
+      refund_amount: refundAmount,
+      reason,
+    }, null);
+    
+    return true;
+  }
+  
+  /**
+   * 添加订单备注
+   */
+  async addRemark(orderId, remark, operatorId) {
+    const order = await db.queryOne('SELECT * FROM order_main WHERE id = ?', [orderId]);
+    
+    if (!order) {
+      throw new BusinessError(ErrorCodes.ORDER_NOT_FOUND);
+    }
+    
+    await db.update('order_main', {
+      admin_remark: remark,
+    }, { id: orderId });
+    
+    await logger.logOperation(operatorId, 'ORDER_REMARK', 'order', orderId, {
+      order_no: order.order_no,
+      remark,
+    }, null);
+    
+    return true;
+  }
+  
+  /**
+   * 手动发货
+   */
+  async manualDeliver(orderId, operatorId) {
+    return await this.manualDelivery(orderId, operatorId);
+  }
+  
+  /**
+   * 确认收款
+   */
+  async confirmPayment(orderId, operatorId) {
+    const order = await db.queryOne('SELECT * FROM order_main WHERE id = ?', [orderId]);
+    
+    if (!order) {
+      throw new BusinessError(ErrorCodes.ORDER_NOT_FOUND);
+    }
+    
+    if (order.order_status !== OrderStatus.PENDING && order.order_status !== OrderStatus.PAYING) {
+      throw new BusinessError({
+        code: 5042,
+        message: '当前订单状态不支持确认收款',
+      });
+    }
+    
+    // 更新订单状态为已支付
+    await db.update('order_main', {
+      order_status: OrderStatus.PAID,
+      pay_time: new Date(),
+      pay_method: 'manual',
+    }, { id: orderId });
+    
+    await logger.logOperation(operatorId, 'ORDER_CONFIRM_PAYMENT', 'order', orderId, {
+      order_no: order.order_no,
+    }, null);
+    
+    // 尝试自动发货
+    try {
+      await this.manualDelivery(orderId, operatorId);
+    } catch (e) {
+      // 发货失败不影响确认收款
+      console.error('自动发货失败:', e.message);
+    }
+    
+    return true;
+  }
+  
+  /**
+   * 导出订单
+   */
+  async exportOrders(params = {}) {
+    let sql = `
+      SELECT 
+        o.*,
+        p.name as product_name,
+        COALESCE(o.buyer_email, o.buyer_phone) as contact,
+        COALESCE(o.pay_channel, '未支付') as pay_method,
+        CASE o.order_status
+          WHEN 0 THEN '待支付'
+          WHEN 1 THEN '支付中'
+          WHEN 2 THEN '已支付'
+          WHEN 3 THEN '已完成'
+          WHEN 4 THEN '待处理'
+          WHEN 5 THEN '已取消'
+          WHEN 6 THEN '已退款'
+          ELSE '未知'
+        END as status_text
+      FROM order_main o
+      LEFT JOIN product p ON o.product_id = p.id
+      WHERE 1=1
+    `;
+    
+    const queryParams = [];
+    
+    if (params.status !== undefined && params.status !== '' && params.status !== null) {
+      sql += ' AND o.order_status = ?';
+      queryParams.push(params.status);
+    }
+    
+    if (params.productId) {
+      sql += ' AND o.product_id = ?';
+      queryParams.push(params.productId);
+    }
+    
+    if (params.startDate) {
+      sql += ' AND o.created_at >= ?';
+      queryParams.push(params.startDate + ' 00:00:00');
+    }
+    
+    if (params.endDate) {
+      sql += ' AND o.created_at <= ?';
+      queryParams.push(params.endDate + ' 23:59:59');
+    }
+    
+    if (params.keyword) {
+      sql += ' AND (o.order_no LIKE ? OR o.contact LIKE ?)';
+      queryParams.push(`%${params.keyword}%`, `%${params.keyword}%`);
+    }
+    
+    sql += ' ORDER BY o.created_at DESC LIMIT 10000';
+    
+    return await db.query(sql, queryParams);
+  }
 }
 
 // 导出订单状态枚举

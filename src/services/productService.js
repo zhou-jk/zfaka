@@ -305,6 +305,13 @@ class ProductService {
   }
   
   /**
+   * 获取分类详情
+   */
+  async getCategoryById(id) {
+    return await db.queryOne('SELECT * FROM product_category WHERE id = ?', [id]);
+  }
+  
+  /**
    * 创建分类
    */
   async createCategory(data) {

@@ -101,6 +101,7 @@ app.use('/api/auth', require('./routes/api/auth'));
 app.use('/api/products', require('./routes/api/products'));
 app.use('/api/orders', require('./routes/api/orders'));
 app.use('/api/payment', require('./routes/api/payment'));
+app.use('/api/admin', require('./routes/api/admin'));
 
 // 管理后台路由
 app.use('/admin', require('./routes/admin'));
