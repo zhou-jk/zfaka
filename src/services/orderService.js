@@ -198,17 +198,30 @@ class OrderService {
   async getOrderList(params = {}) {
     const { page = 1, limit = 20, order_no, email, status, product_id, start_date, end_date } = params;
 
-    // 参数规范化（防止数组、空字符串导致占位符/参数不匹配）
-    const orderNo = Array.isArray(order_no) ? order_no[0] : order_no;
-    const emailLike = Array.isArray(email) ? email[0] : email;
-    const statusRaw = Array.isArray(status) ? status[0] : status;
-    const productRaw = Array.isArray(product_id) ? product_id[0] : product_id;
-    const statusFilter = (statusRaw === undefined || statusRaw === null || statusRaw === '' || Number.isNaN(Number(statusRaw)))
-      ? null : parseInt(statusRaw, 10);
-    const productFilter = (productRaw === undefined || productRaw === null || productRaw === '' || Number.isNaN(Number(productRaw)))
-      ? null : parseInt(productRaw, 10);
-    const startDate = (start_date && typeof start_date === 'string' && start_date.trim() && start_date !== 'undefined') ? start_date.trim() : null;
-    const endDate = (end_date && typeof end_date === 'string' && end_date.trim() && end_date !== 'undefined') ? end_date.trim() : null;
+    // 辅助函数：安全获取非空字符串
+    const safeStr = (val) => {
+      if (val === undefined || val === null) return null;
+      const s = Array.isArray(val) ? val[0] : val;
+      if (typeof s !== 'string') return null;
+      const trimmed = s.trim();
+      if (!trimmed || trimmed === 'undefined' || trimmed === 'null') return null;
+      return trimmed;
+    };
+
+    // 辅助函数：安全获取整数
+    const safeInt = (val) => {
+      if (val === undefined || val === null || val === '') return null;
+      const s = Array.isArray(val) ? val[0] : val;
+      const n = parseInt(s, 10);
+      return Number.isNaN(n) ? null : n;
+    };
+
+    const orderNo = safeStr(order_no);
+    const emailLike = safeStr(email);
+    const statusFilter = safeInt(status);
+    const productFilter = safeInt(product_id);
+    const startDate = safeStr(start_date);
+    const endDate = safeStr(end_date);
 
     let sql = `
       SELECT o.*, p.name as product_name_current
@@ -259,17 +272,37 @@ class OrderService {
   async getOrderStats(params = {}) {
     const { order_no, email, status, product_id, start_date, end_date } = params;
 
-    // 参数规范化
-    const orderNo = Array.isArray(order_no) ? order_no[0] : order_no;
-    const emailLike = Array.isArray(email) ? email[0] : email;
-    const statusRaw = Array.isArray(status) ? status[0] : status;
-    const productRaw = Array.isArray(product_id) ? product_id[0] : product_id;
-    const statusFilter = (statusRaw === undefined || statusRaw === null || statusRaw === '' || Number.isNaN(Number(statusRaw)))
-      ? null : parseInt(statusRaw, 10);
-    const productFilter = (productRaw === undefined || productRaw === null || productRaw === '' || Number.isNaN(Number(productRaw)))
-      ? null : parseInt(productRaw, 10);
-    const startDate = (start_date && typeof start_date === 'string' && start_date.trim() && start_date !== 'undefined') ? start_date.trim() : null;
-    const endDate = (end_date && typeof end_date === 'string' && end_date.trim() && end_date !== 'undefined') ? end_date.trim() : null;
+    // 调试日志
+    const logger = require('../utils/logger');
+    logger.debug('getOrderStats params:', { order_no, email, status, product_id, start_date, end_date });
+
+    // 辅助函数：安全获取非空字符串
+    const safeStr = (val) => {
+      if (val === undefined || val === null) return null;
+      const s = Array.isArray(val) ? val[0] : val;
+      if (typeof s !== 'string') return null;
+      const trimmed = s.trim();
+      if (!trimmed || trimmed === 'undefined' || trimmed === 'null') return null;
+      return trimmed;
+    };
+
+    // 辅助函数：安全获取整数
+    const safeInt = (val) => {
+      if (val === undefined || val === null || val === '') return null;
+      const s = Array.isArray(val) ? val[0] : val;
+      const n = parseInt(s, 10);
+      return Number.isNaN(n) ? null : n;
+    };
+
+    const orderNo = safeStr(order_no);
+    const emailLike = safeStr(email);
+    const statusFilter = safeInt(status);
+    const productFilter = safeInt(product_id);
+    const startDate = safeStr(start_date);
+    const endDate = safeStr(end_date);
+
+    logger.debug('getOrderStats normalized:', { orderNo, emailLike, statusFilter, productFilter, startDate, endDate });
+
     let sql = `
       SELECT
         COUNT(*) AS total,
