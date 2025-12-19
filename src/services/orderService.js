@@ -207,9 +207,9 @@ class OrderService {
       ? null : parseInt(statusRaw, 10);
     const productFilter = (productRaw === undefined || productRaw === null || productRaw === '' || Number.isNaN(Number(productRaw)))
       ? null : parseInt(productRaw, 10);
-    const startDate = (start_date && typeof start_date === 'string' && start_date.trim()) ? start_date.trim() : null;
-    const endDate = (end_date && typeof end_date === 'string' && end_date.trim()) ? end_date.trim() : null;
-    
+    const startDate = (start_date && typeof start_date === 'string' && start_date.trim() && start_date !== 'undefined') ? start_date.trim() : null;
+    const endDate = (end_date && typeof end_date === 'string' && end_date.trim() && end_date !== 'undefined') ? end_date.trim() : null;
+
     let sql = `
       SELECT o.*, p.name as product_name_current
       FROM order_main o
@@ -268,8 +268,8 @@ class OrderService {
       ? null : parseInt(statusRaw, 10);
     const productFilter = (productRaw === undefined || productRaw === null || productRaw === '' || Number.isNaN(Number(productRaw)))
       ? null : parseInt(productRaw, 10);
-    const startDate = (start_date && typeof start_date === 'string' && start_date.trim()) ? start_date.trim() : null;
-    const endDate = (end_date && typeof end_date === 'string' && end_date.trim()) ? end_date.trim() : null;
+    const startDate = (start_date && typeof start_date === 'string' && start_date.trim() && start_date !== 'undefined') ? start_date.trim() : null;
+    const endDate = (end_date && typeof end_date === 'string' && end_date.trim() && end_date !== 'undefined') ? end_date.trim() : null;
     let sql = `
       SELECT
         COUNT(*) AS total,
