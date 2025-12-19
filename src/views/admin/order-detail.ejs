@@ -15,12 +15,12 @@
   </div>
   <div>
     <% if (order.order_status === 0) { %>
-      <button type="button" class="btn btn-outline-secondary" onclick="cancelOrder()">
+      <button type="button" class="btn btn-outline-secondary" id="cancelOrderBtn">
         <i class="bi bi-x-circle me-2"></i>取消订单
       </button>
     <% } %>
     <% if (order.order_status === 3) { %>
-      <button type="button" class="btn btn-outline-danger" onclick="refundOrder()">
+      <button type="button" class="btn btn-outline-danger" id="refundOrderBtn">
         <i class="bi bi-arrow-counterclockwise me-2"></i>退款
       </button>
     <% } %>
@@ -107,6 +107,7 @@
     </div>
 
     <!-- 支付信息 -->
+    <% var payment = order.payments && order.payments[0]; %>
     <% if (payment) { %>
     <div class="card table-card mb-4">
       <div class="card-header">
@@ -151,7 +152,7 @@
     <div class="card table-card mb-4">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">发货卡密</h5>
-        <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyAllCards()">
+        <button type="button" class="btn btn-sm btn-outline-primary" id="copyAllCardsBtn">
           <i class="bi bi-clipboard me-1"></i>复制全部
         </button>
       </div>
@@ -176,7 +177,7 @@
                     <% } %>
                   </td>
                   <td>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyCard(<%= index %>)">
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-copy-card" data-index="<%= index %>">
                       <i class="bi bi-clipboard"></i>
                     </button>
                   </td>
@@ -252,7 +253,7 @@
       </div>
       <div class="card-body">
         <textarea class="form-control" id="remark" rows="3" placeholder="添加备注..."><%= order.remark || '' %></textarea>
-        <button type="button" class="btn btn-sm btn-primary mt-2" onclick="saveRemark()">保存备注</button>
+        <button type="button" class="btn btn-sm btn-primary mt-2" id="saveRemarkBtn">保存备注</button>
       </div>
     </div>
   </div>
@@ -287,66 +288,86 @@
 <script>
   const cards = <%- JSON.stringify(order.cards || []) %>;
 
-  function copyCard(index) {
-    const card = cards[index];
-    const text = card.card_code || card.content || '';
-    navigator.clipboard.writeText(text).then(() => {
-      showAlert('已复制到剪贴板');
-    });
-  }
-
-  function copyAllCards() {
-    const text = cards.map(c => c.card_code || c.content || '').join('\n');
-    navigator.clipboard.writeText(text).then(() => {
-      showAlert('全部卡密已复制到剪贴板');
-    });
-  }
-
-  async function cancelOrder() {
-    confirmDelete('确定要取消该订单吗？', async () => {
-      try {
-        const response = await fetch('/api/admin/orders/<%= order.id %>/cancel', {
-          method: 'POST',
-        });
-        const result = await response.json();
-        if (result.code !== 0) throw new Error(result.message);
-        showAlert('订单已取消');
-        location.reload();
-      } catch (error) {
-        showAlert(error.message || '操作失败', 'danger');
-      }
-    });
-  }
-
-  async function refundOrder() {
-    confirmDelete('确定要退款吗？退款后卡密将被作废。', async () => {
-      try {
-        const response = await fetch('/api/admin/orders/<%= order.id %>/refund', {
-          method: 'POST',
-        });
-        const result = await response.json();
-        if (result.code !== 0) throw new Error(result.message);
-        showAlert('退款成功');
-        location.reload();
-      } catch (error) {
-        showAlert(error.message || '退款失败', 'danger');
-      }
-    });
-  }
-
-  async function saveRemark() {
-    try {
-      const remark = document.getElementById('remark').value;
-      const response = await fetch('/api/admin/orders/<%= order.id %>/remark', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ remark }),
+  // 复制单个卡密按钮
+  document.querySelectorAll('.btn-copy-card').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const index = parseInt(this.dataset.index);
+      const card = cards[index];
+      const text = card.card_code || card.content || '';
+      navigator.clipboard.writeText(text).then(function() {
+        showAlert('已复制到剪贴板');
       });
-      const result = await response.json();
-      if (result.code !== 0) throw new Error(result.message);
-      showAlert('备注已保存');
-    } catch (error) {
-      showAlert(error.message || '保存失败', 'danger');
-    }
+    });
+  });
+
+  // 复制全部卡密按钮
+  var copyAllBtn = document.getElementById('copyAllCardsBtn');
+  if (copyAllBtn) {
+    copyAllBtn.addEventListener('click', function() {
+      const text = cards.map(function(c) { return c.card_code || c.content || ''; }).join('\n');
+      navigator.clipboard.writeText(text).then(function() {
+        showAlert('全部卡密已复制到剪贴板');
+      });
+    });
+  }
+
+  // 取消订单按钮
+  var cancelBtn = document.getElementById('cancelOrderBtn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function() {
+      confirmDelete('确定要取消该订单吗？', async function() {
+        try {
+          const response = await fetch('/api/admin/orders/<%= order.id %>/cancel', {
+            method: 'POST',
+          });
+          const result = await response.json();
+          if (result.code !== 0) throw new Error(result.message);
+          showAlert('订单已取消');
+          location.reload();
+        } catch (error) {
+          showAlert(error.message || '操作失败', 'danger');
+        }
+      });
+    });
+  }
+
+  // 退款按钮
+  var refundBtn = document.getElementById('refundOrderBtn');
+  if (refundBtn) {
+    refundBtn.addEventListener('click', function() {
+      confirmDelete('确定要退款吗？退款后卡密将被作废。', async function() {
+        try {
+          const response = await fetch('/api/admin/orders/<%= order.id %>/refund', {
+            method: 'POST',
+          });
+          const result = await response.json();
+          if (result.code !== 0) throw new Error(result.message);
+          showAlert('退款成功');
+          location.reload();
+        } catch (error) {
+          showAlert(error.message || '退款失败', 'danger');
+        }
+      });
+    });
+  }
+
+  // 保存备注按钮
+  var saveRemarkBtn = document.getElementById('saveRemarkBtn');
+  if (saveRemarkBtn) {
+    saveRemarkBtn.addEventListener('click', async function() {
+      try {
+        const remark = document.getElementById('remark').value;
+        const response = await fetch('/api/admin/orders/<%= order.id %>/remark', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ remark }),
+        });
+        const result = await response.json();
+        if (result.code !== 0) throw new Error(result.message);
+        showAlert('备注已保存');
+      } catch (error) {
+        showAlert(error.message || '保存失败', 'danger');
+      }
+    });
   }
 </script>
