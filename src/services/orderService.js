@@ -240,6 +240,66 @@ class OrderService {
     
     return await db.paginate(sql, sqlParams, page, limit);
   }
+
+  /**
+   * 订单统计（可按筛选条件）
+   */
+  async getOrderStats(params = {}) {
+    const { order_no, email, status, product_id, start_date, end_date } = params;
+    let sql = `
+      SELECT
+        COUNT(*) AS total,
+        SUM(total_amount) AS total_amount,
+        SUM(CASE WHEN order_status = 1 THEN 1 ELSE 0 END) AS paid,
+        SUM(CASE WHEN order_status = 0 THEN 1 ELSE 0 END) AS pending,
+        SUM(CASE WHEN order_status = 3 THEN 1 ELSE 0 END) AS delivered,
+        SUM(CASE WHEN order_status = 1 THEN total_amount ELSE 0 END) AS paid_amount
+      FROM order_main o
+      WHERE 1=1
+    `;
+    const sqlParams = [];
+
+    if (order_no) {
+      sql += ' AND o.order_no = ?';
+      sqlParams.push(order_no);
+    }
+
+    if (email) {
+      sql += ' AND o.buyer_email LIKE ?';
+      sqlParams.push(`%${email}%`);
+    }
+
+    if (status !== undefined) {
+      sql += ' AND o.order_status = ?';
+      sqlParams.push(status);
+    }
+
+    if (product_id) {
+      sql += ' AND o.product_id = ?';
+      sqlParams.push(product_id);
+    }
+
+    if (start_date) {
+      sql += ' AND o.created_at >= ?';
+      sqlParams.push(start_date);
+    }
+
+    if (end_date) {
+      sql += ' AND o.created_at <= ?';
+      sqlParams.push(end_date + ' 23:59:59');
+    }
+
+    const row = await db.queryOne(sql, sqlParams);
+    // 防止 null 透传到模板
+    return {
+      total: row?.total || 0,
+      total_amount: parseFloat(row?.total_amount || 0),
+      paid: row?.paid || 0,
+      pending: row?.pending || 0,
+      delivered: row?.delivered || 0,
+      paid_amount: parseFloat(row?.paid_amount || 0),
+    };
+  }
   
   /**
    * 更新订单状态

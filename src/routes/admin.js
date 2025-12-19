@@ -256,12 +256,14 @@ router.get('/orders', asyncHandler(async (req, res) => {
     limit,
     ...req.query,
   });
+  const stats = await orderService.getOrderStats(req.query);
   
   res.render('admin/orders', {
     title: '订单管理',
     orders: result.data,
     pagination: result.pagination,
     products: productsResult.data,
+    stats,
     query: req.query,
   });
 }));
