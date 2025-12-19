@@ -371,6 +371,23 @@ class CardService {
     
     return await db.paginate(sql, sqlParams, page, limit);
   }
+
+  /**
+   * 获取最近导入批次
+   */
+  async getRecentBatches(limit = 10) {
+    const [rows] = await db.query(
+      `SELECT b.id, b.batch_no, b.product_id, b.file_name,
+              b.total_count, b.success_count, b.fail_count, b.duplicate_count,
+              b.status, b.created_at, p.name AS product_name
+       FROM card_import_batch b
+       LEFT JOIN product p ON b.product_id = p.id
+       ORDER BY b.id DESC
+       LIMIT ?`,
+      [limit]
+    );
+    return rows;
+  }
   
   /**
    * 获取订单关联的卡密

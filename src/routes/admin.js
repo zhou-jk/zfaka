@@ -136,10 +136,12 @@ router.get('/cards', asyncHandler(async (req, res) => {
  */
 router.get('/cards/import', asyncHandler(async (req, res) => {
   const productsResult = await productService.getProductListAdmin({ limit: 100, status: 1 });
+  const recentBatches = await cardService.getRecentBatches(10);
   
   res.render('admin/card-import', {
     title: '导入卡密',
     products: productsResult.data,
+    recentBatches,
   });
 }));
 

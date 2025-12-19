@@ -28,6 +28,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
+      connectSrc: ["'self'", "https://cdn.bootcdn.net"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.bootcdn.net"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.bootcdn.net"],
       imgSrc: ["'self'", "data:", "https:"],
