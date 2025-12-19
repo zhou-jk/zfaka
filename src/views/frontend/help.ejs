@@ -1,0 +1,177 @@
+<%- include('../layouts/main', { body: `
+
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="mb-4">帮助中心</h1>
+
+      <!-- 常见问题 -->
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>常见问题</h5>
+        </div>
+        <div class="card-body">
+          <div class="accordion" id="faqAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                  如何购买商品？
+                </button>
+              </h2>
+              <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  <ol>
+                    <li>在首页选择您需要的商品</li>
+                    <li>点击进入商品详情页</li>
+                    <li>选择购买数量，填写邮箱（可选）</li>
+                    <li>点击"立即购买"按钮</li>
+                    <li>选择支付方式完成支付</li>
+                    <li>支付成功后系统自动发货</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                  支付成功后多久能收到卡密？
+                </button>
+              </h2>
+              <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  支付成功后系统会在几秒钟内自动发货，您可以在订单详情页面查看卡密信息。如果长时间未收到，请联系客服处理。
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                  如何查询我的订单？
+                </button>
+              </h2>
+              <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  您可以通过以下方式查询订单：
+                  <ul>
+                    <li>使用订单号查询：在订单查询页面输入您的订单号</li>
+                    <li>使用邮箱查询：如果购买时填写了邮箱，可以通过邮箱查询所有相关订单</li>
+                  </ul>
+                  <a href="/order/query" class="btn btn-sm btn-primary">前往订单查询</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                  卡密无法使用怎么办？
+                </button>
+              </h2>
+              <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  如果卡密无法使用，请按以下步骤排查：
+                  <ol>
+                    <li>确认卡密是否复制完整，没有遗漏或多余字符</li>
+                    <li>确认卡密使用方法是否正确</li>
+                    <li>确认卡密是否已被使用（每个卡密只能使用一次）</li>
+                  </ol>
+                  如确认无误仍无法使用，请联系客服并提供订单号。
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                  支持哪些支付方式？
+                </button>
+              </h2>
+              <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  目前支持以下支付方式：
+                  <ul>
+                    <li><i class="bi bi-alipay text-primary"></i> 支付宝</li>
+                  </ul>
+                  更多支付方式正在接入中，敬请期待。
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                  可以申请退款吗？
+                </button>
+              </h2>
+              <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  虚拟商品一经售出原则上不支持退款。但以下情况可以申请退款：
+                  <ul>
+                    <li>卡密确实存在问题无法使用</li>
+                    <li>系统发货失败</li>
+                  </ul>
+                  如需申请退款，请联系客服并提供订单号和问题描述。
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                  订单会自动取消吗？
+                </button>
+              </h2>
+              <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  是的，未支付的订单将在15分钟后自动取消。如果订单被取消，您可以重新下单购买。
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 联系客服 -->
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0"><i class="bi bi-headset me-2"></i>联系客服</h5>
+        </div>
+        <div class="card-body">
+          <p class="mb-4">如果您的问题在上方没有找到答案，请通过以下方式联系我们：</p>
+          
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="border rounded p-3 text-center">
+                <i class="bi bi-envelope display-4 text-primary"></i>
+                <h6 class="mt-3">邮箱联系</h6>
+                <p class="text-muted mb-2">发送邮件给我们</p>
+                <a href="mailto:support@example.com" class="btn btn-outline-primary btn-sm">
+                  support@example.com
+                </a>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="border rounded p-3 text-center">
+                <i class="bi bi-chat-dots display-4 text-success"></i>
+                <h6 class="mt-3">在线客服</h6>
+                <p class="text-muted mb-2">工作时间：9:00-22:00</p>
+                <button class="btn btn-outline-success btn-sm">
+                  在线咨询
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-info mt-4 mb-0">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>温馨提示：</strong>联系客服时请提供您的订单号，以便我们更快地为您处理问题。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+` }) %>

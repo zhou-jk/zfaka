@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - 自动售货系统</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+    }
+    body {
+      min-height: 100vh;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      padding-top: 1rem;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    .sidebar .brand {
+      padding: 1rem 1.5rem;
+      color: #fff;
+      font-size: 1.25rem;
+      font-weight: bold;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 1rem;
+    }
+    .sidebar .nav-link {
+      color: rgba(255,255,255,0.8);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s;
+    }
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active {
+      color: #fff;
+      background: rgba(255,255,255,0.1);
+    }
+    .sidebar .nav-link i {
+      margin-right: 0.75rem;
+      font-size: 1.1rem;
+    }
+    .sidebar .nav-section {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      padding: 1rem 1.5rem 0.5rem;
+      letter-spacing: 0.05em;
+    }
+    .main-content {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      background: #f8f9fa;
+    }
+    .top-navbar {
+      background: #fff;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .content-wrapper {
+      padding: 1.5rem;
+    }
+    .stat-card {
+      border: none;
+      border-radius: 0.5rem;
+      box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    }
+    .stat-card .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .table-card {
+      background: #fff;
+      border-radius: 0.5rem;
+      box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    }
+    .table-card .card-header {
+      background: transparent;
+      border-bottom: 1px solid #e9ecef;
+      padding: 1rem 1.25rem;
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="brand">
+      <i class="bi bi-shop me-2"></i>管理后台
+    </div>
+    <nav class="nav flex-column">
+      <a class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>" href="/admin/dashboard">
+        <i class="bi bi-speedometer2"></i>控制台
+      </a>
+      
+      <div class="nav-section">商品管理</div>
+      <a class="nav-link <%= currentPage === 'products' ? 'active' : '' %>" href="/admin/products">
+        <i class="bi bi-box-seam"></i>商品列表
+      </a>
+      <a class="nav-link <%= currentPage === 'categories' ? 'active' : '' %>" href="/admin/categories">
+        <i class="bi bi-folder"></i>商品分类
+      </a>
+      
+      <div class="nav-section">卡密管理</div>
+      <a class="nav-link <%= currentPage === 'cards' ? 'active' : '' %>" href="/admin/cards">
+        <i class="bi bi-key"></i>卡密列表
+      </a>
+      <a class="nav-link <%= currentPage === 'card-import' ? 'active' : '' %>" href="/admin/cards/import">
+        <i class="bi bi-cloud-upload"></i>导入卡密
+      </a>
+      
+      <div class="nav-section">订单管理</div>
+      <a class="nav-link <%= currentPage === 'orders' ? 'active' : '' %>" href="/admin/orders">
+        <i class="bi bi-receipt"></i>订单列表
+      </a>
+      
+      <div class="nav-section">数据统计</div>
+      <a class="nav-link <%= currentPage === 'statistics' ? 'active' : '' %>" href="/admin/statistics">
+        <i class="bi bi-graph-up"></i>数据统计
+      </a>
+      <a class="nav-link <%= currentPage === 'logs' ? 'active' : '' %>" href="/admin/logs">
+        <i class="bi bi-journal-text"></i>操作日志
+      </a>
+      
+      <div class="nav-section">系统设置</div>
+      <a class="nav-link <%= currentPage === 'settings' ? 'active' : '' %>" href="/admin/settings">
+        <i class="bi bi-gear"></i>系统设置
+      </a>
+    </nav>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="main-content">
+    <!-- 顶部导航 -->
+    <div class="top-navbar">
+      <div>
+        <button class="btn btn-link d-md-none" id="sidebarToggle">
+          <i class="bi bi-list fs-4"></i>
+        </button>
+        <span class="text-muted"><%= pageTitle || '控制台' %></span>
+      </div>
+      <div class="dropdown">
+        <a class="btn btn-link text-dark dropdown-toggle text-decoration-none" href="#" data-bs-toggle="dropdown">
+          <i class="bi bi-person-circle me-1"></i>
+          <%= user?.username || '管理员' %>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="/admin/profile"><i class="bi bi-person me-2"></i>个人信息</a></li>
+          <li><a class="dropdown-item" href="/admin/password"><i class="bi bi-key me-2"></i>修改密码</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i>退出登录</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 页面内容 -->
+    <div class="content-wrapper">
+      <%- body %>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 侧边栏切换
+    document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('show');
+    });
+
+    // 退出登录
+    async function logout() {
+      if (!confirm('确定要退出登录吗？')) return;
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/admin/login';
+      } catch (e) {
+        window.location.href = '/admin/login';
+      }
+    }
+
+    // 通用提示
+    function showAlert(message, type = 'success') {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+      alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 250px;';
+      alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.body.appendChild(alertDiv);
+      setTimeout(() => alertDiv.remove(), 3000);
+    }
+
+    // 确认删除
+    function confirmDelete(message, callback) {
+      if (confirm(message || '确定要删除吗？')) {
+        callback();
+      }
+    }
+
+    // 格式化日期
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      return new Date(dateStr).toLocaleString('zh-CN');
+    }
+
+    // 格式化金额
+    function formatMoney(amount) {
+      return '¥' + parseFloat(amount || 0).toFixed(2);
+    }
+  </script>
+</body>
+</html>

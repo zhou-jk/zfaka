@@ -1,0 +1,194 @@
+<%- include('../layouts/main', { body: `
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="bi bi-search me-2"></i>订单查询</h5>
+        </div>
+        <div class="card-body p-4">
+          <form id="queryForm">
+            <div class="mb-4">
+              <label class="form-label">查询方式</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="queryType" id="byOrderNo" value="order_no" checked>
+                <label class="btn btn-outline-primary" for="byOrderNo">订单号</label>
+                <input type="radio" class="btn-check" name="queryType" id="byEmail" value="email">
+                <label class="btn btn-outline-primary" for="byEmail">邮箱</label>
+              </div>
+            </div>
+
+            <div class="mb-4" id="orderNoGroup">
+              <label class="form-label">订单号</label>
+              <input type="text" class="form-control form-control-lg" name="order_no" 
+                     placeholder="请输入订单号" value="${query.order_no || ''}">
+              <small class="text-muted">输入购买时获得的订单号</small>
+            </div>
+
+            <div class="mb-4 d-none" id="emailGroup">
+              <label class="form-label">邮箱地址</label>
+              <input type="email" class="form-control form-control-lg" name="email" 
+                     placeholder="请输入邮箱地址" value="${query.email || ''}">
+              <small class="text-muted">输入购买时填写的邮箱</small>
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-search me-2"></i>查询订单
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 查询结果 -->
+      <div id="resultArea" class="mt-4 d-none">
+        <!-- 结果将通过JS动态加载 -->
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="/" class="text-decoration-none">
+          <i class="bi bi-arrow-left me-1"></i>返回首页
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 切换查询方式
+  document.querySelectorAll('input[name="queryType"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const isOrderNo = this.value === 'order_no';
+      document.getElementById('orderNoGroup').classList.toggle('d-none', !isOrderNo);
+      document.getElementById('emailGroup').classList.toggle('d-none', isOrderNo);
+    });
+  });
+
+  // 提交查询
+  document.getElementById('queryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const queryType = document.querySelector('input[name="queryType"]:checked').value;
+    const formData = new FormData(this);
+    
+    let url = '/api/orders/query?';
+    if (queryType === 'order_no') {
+      const orderNo = formData.get('order_no');
+      if (!orderNo) {
+        alert('请输入订单号');
+        return;
+      }
+      url += 'order_no=' + encodeURIComponent(orderNo);
+    } else {
+      const email = formData.get('email');
+      if (!email) {
+        alert('请输入邮箱');
+        return;
+      }
+      url += 'email=' + encodeURIComponent(email);
+    }
+
+    try {
+      const btn = this.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>查询中...';
+
+      const response = await fetch(url);
+      const result = await response.json();
+
+      if (result.code !== 0) {
+        throw new Error(result.message);
+      }
+
+      displayResults(result.data.orders || [result.data.order]);
+
+    } catch (error) {
+      document.getElementById('resultArea').innerHTML = \`
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>\${error.message || '查询失败'}
+        </div>
+      \`;
+      document.getElementById('resultArea').classList.remove('d-none');
+    } finally {
+      const btn = this.querySelector('button[type="submit"]');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-search me-2"></i>查询订单';
+    }
+  });
+
+  function displayResults(orders) {
+    const resultArea = document.getElementById('resultArea');
+    
+    if (!orders || orders.length === 0) {
+      resultArea.innerHTML = \`
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>未找到订单记录
+        </div>
+      \`;
+      resultArea.classList.remove('d-none');
+      return;
+    }
+
+    let html = '';
+    orders.forEach(order => {
+      const statusClass = {
+        'pending': 'warning',
+        'paid': 'info',
+        'delivered': 'success',
+        'cancelled': 'secondary',
+        'refunded': 'danger',
+      }[order.status] || 'secondary';
+
+      const statusText = {
+        'pending': '待支付',
+        'paid': '已支付',
+        'delivered': '已发货',
+        'cancelled': '已取消',
+        'refunded': '已退款',
+      }[order.status] || order.status;
+
+      html += \`
+        <div class="card mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>订单号：\${order.order_no}</span>
+            <span class="badge bg-\${statusClass}">\${statusText}</span>
+          </div>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-6">
+                <small class="text-muted">商品名称</small>
+                <div>\${order.product_name}</div>
+              </div>
+              <div class="col-3">
+                <small class="text-muted">数量</small>
+                <div>\${order.quantity}</div>
+              </div>
+              <div class="col-3">
+                <small class="text-muted">金额</small>
+                <div class="text-danger fw-bold">¥\${parseFloat(order.total_amount).toFixed(2)}</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-6">
+                <small class="text-muted">创建时间</small>
+                <div>\${new Date(order.created_at).toLocaleString()}</div>
+              </div>
+              <div class="col-6 text-end">
+                <a href="/order/\${order.order_no}" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-eye me-1"></i>查看详情
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      \`;
+    });
+
+    resultArea.innerHTML = html;
+    resultArea.classList.remove('d-none');
+  }
+</script>
+
+` }) %>

@@ -1,0 +1,155 @@
+/* 自动售货系统自定义样式 */
+
+:root {
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --success-color: #198754;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #0dcaf0;
+}
+
+/* 通用样式 */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+/* 卡片悬停效果 */
+.card.product-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* 商品标签 */
+.badge-hot {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.badge-recommend {
+  background-color: var(--warning-color);
+  color: #212529;
+}
+
+/* 价格样式 */
+.price {
+  color: var(--danger-color);
+  font-weight: bold;
+}
+
+.price-original {
+  color: var(--secondary-color);
+  text-decoration: line-through;
+  font-size: 0.875rem;
+}
+
+/* 库存状态 */
+.stock-available {
+  color: var(--success-color);
+}
+
+.stock-empty {
+  color: var(--danger-color);
+}
+
+/* 订单状态徽章 */
+.status-pending {
+  background-color: var(--warning-color);
+  color: #212529;
+}
+
+.status-paid {
+  background-color: var(--info-color);
+  color: #212529;
+}
+
+.status-delivered {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.status-cancelled {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.status-refunded {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+/* 卡密显示 */
+.card-code {
+  font-family: "Consolas", "Monaco", monospace;
+  background-color: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  word-break: break-all;
+}
+
+/* 分类侧边栏 */
+.category-sidebar .list-group-item {
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.category-sidebar .list-group-item:hover,
+.category-sidebar .list-group-item.active {
+  border-left-color: var(--primary-color);
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--secondary-color);
+}
+
+.empty-state i {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+/* 加载动画 */
+.loading-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .product-card .card-img-top {
+    height: 150px;
+    object-fit: cover;
+  }
+  
+  .category-sidebar {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .card-code {
+    background-color: white;
+    border: 1px solid #000;
+  }
+}

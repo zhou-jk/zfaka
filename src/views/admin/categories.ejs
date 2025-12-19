@@ -1,0 +1,220 @@
+<%- include('../layouts/admin', { 
+  currentPage: 'categories',
+  pageTitle: '商品分类',
+  user: user,
+  body: `
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="mb-0">商品分类</h4>
+    <small class="text-muted">管理商品分类</small>
+  </div>
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openAddModal()">
+    <i class="bi bi-plus-lg me-2"></i>添加分类
+  </button>
+</div>
+
+<!-- 分类列表 -->
+<div class="card table-card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th width="60">ID</th>
+            <th>分类名称</th>
+            <th>分类描述</th>
+            <th>商品数量</th>
+            <th>排序</th>
+            <th>状态</th>
+            <th width="150">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${categories && categories.length > 0 ? categories.map(c => `
+            <tr>
+              <td>${c.id}</td>
+              <td>
+                <i class="bi bi-${c.icon || 'folder'} me-2 text-primary"></i>
+                <span class="fw-medium">${c.name}</span>
+              </td>
+              <td class="text-muted">${c.description || '-'}</td>
+              <td><span class="badge bg-secondary">${c.product_count || 0}</span></td>
+              <td>${c.sort_order || 0}</td>
+              <td>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" ${c.status ? 'checked' : ''} 
+                         onchange="toggleStatus(${c.id}, this.checked)">
+                </div>
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <button type="button" class="btn btn-outline-primary" title="编辑" 
+                          onclick='openEditModal(${JSON.stringify(c)})'>
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button type="button" class="btn btn-outline-danger" title="删除" 
+                          onclick="deleteCategory(${c.id})" ${c.product_count > 0 ? 'disabled' : ''}>
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `).join('') : `
+            <tr>
+              <td colspan="7" class="text-center py-4 text-muted">暂无分类数据</td>
+            </tr>
+          `}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 分类弹窗 -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">添加分类</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="categoryForm">
+        <div class="modal-body">
+          <input type="hidden" name="id" id="categoryId">
+          <div class="mb-3">
+            <label class="form-label">分类名称 <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="name" id="categoryName" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">分类描述</label>
+            <textarea class="form-control" name="description" id="categoryDescription" rows="2"></textarea>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label">图标</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi" id="iconPreview"></i></span>
+                <input type="text" class="form-control" name="icon" id="categoryIcon" placeholder="folder" onchange="updateIconPreview()">
+              </div>
+              <small class="text-muted">Bootstrap Icons 名称</small>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">排序权重</label>
+              <input type="number" class="form-control" name="sort_order" id="categorySortOrder" value="0">
+            </div>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="categoryStatus" name="status" checked>
+            <label class="form-check-label" for="categoryStatus">启用分类</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentEditId = null;
+  const modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+
+  function openAddModal() {
+    currentEditId = null;
+    document.getElementById('modalTitle').textContent = '添加分类';
+    document.getElementById('categoryForm').reset();
+    document.getElementById('categoryStatus').checked = true;
+    updateIconPreview();
+  }
+
+  function openEditModal(category) {
+    currentEditId = category.id;
+    document.getElementById('modalTitle').textContent = '编辑分类';
+    document.getElementById('categoryId').value = category.id;
+    document.getElementById('categoryName').value = category.name;
+    document.getElementById('categoryDescription').value = category.description || '';
+    document.getElementById('categoryIcon').value = category.icon || '';
+    document.getElementById('categorySortOrder').value = category.sort_order || 0;
+    document.getElementById('categoryStatus').checked = category.status !== 0;
+    updateIconPreview();
+    modal.show();
+  }
+
+  function updateIconPreview() {
+    const icon = document.getElementById('categoryIcon').value || 'folder';
+    document.getElementById('iconPreview').className = 'bi bi-' + icon;
+  }
+
+  document.getElementById('categoryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+      name: formData.get('name'),
+      description: formData.get('description'),
+      icon: formData.get('icon'),
+      sort_order: parseInt(formData.get('sort_order')) || 0,
+      status: document.getElementById('categoryStatus').checked ? 1 : 0,
+    };
+
+    try {
+      const url = currentEditId 
+        ? '/api/admin/categories/' + currentEditId
+        : '/api/admin/categories';
+      const method = currentEditId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+      if (result.code !== 0) throw new Error(result.message);
+
+      modal.hide();
+      showAlert(currentEditId ? '分类已更新' : '分类已添加');
+      location.reload();
+
+    } catch (error) {
+      showAlert(error.message || '操作失败', 'danger');
+    }
+  });
+
+  async function toggleStatus(id, status) {
+    try {
+      const response = await fetch('/api/admin/categories/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status ? 1 : 0 }),
+      });
+      const result = await response.json();
+      if (result.code !== 0) throw new Error(result.message);
+      showAlert(status ? '分类已启用' : '分类已禁用');
+    } catch (error) {
+      showAlert(error.message || '操作失败', 'danger');
+      location.reload();
+    }
+  }
+
+  async function deleteCategory(id) {
+    confirmDelete('确定要删除该分类吗？', async () => {
+      try {
+        const response = await fetch('/api/admin/categories/' + id, {
+          method: 'DELETE',
+        });
+        const result = await response.json();
+        if (result.code !== 0) throw new Error(result.message);
+        showAlert('分类已删除');
+        location.reload();
+      } catch (error) {
+        showAlert(error.message || '删除失败', 'danger');
+      }
+    });
+  }
+</script>
+
+` }) %>

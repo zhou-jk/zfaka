@@ -1,0 +1,272 @@
+<%- include('../layouts/admin', { 
+  currentPage: 'dashboard',
+  pageTitle: '控制台',
+  user: user,
+  body: `
+
+<!-- 统计卡片 -->
+<div class="row g-4 mb-4">
+  <div class="col-xl-3 col-md-6">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center">
+        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+          <i class="bi bi-currency-yen"></i>
+        </div>
+        <div class="ms-3">
+          <div class="text-muted small">今日销售额</div>
+          <div class="fs-4 fw-bold">${formatMoney(stats.today?.sales || 0)}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center">
+        <div class="stat-icon bg-success bg-opacity-10 text-success">
+          <i class="bi bi-receipt"></i>
+        </div>
+        <div class="ms-3">
+          <div class="text-muted small">今日订单</div>
+          <div class="fs-4 fw-bold">${stats.today?.orders || 0} 单</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center">
+        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+          <i class="bi bi-box-seam"></i>
+        </div>
+        <div class="ms-3">
+          <div class="text-muted small">商品数量</div>
+          <div class="fs-4 fw-bold">${stats.products || 0} 个</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center">
+        <div class="stat-icon bg-info bg-opacity-10 text-info">
+          <i class="bi bi-key"></i>
+        </div>
+        <div class="ms-3">
+          <div class="text-muted small">卡密库存</div>
+          <div class="fs-4 fw-bold">${stats.cards || 0} 张</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- 销售趋势 -->
+  <div class="col-xl-8">
+    <div class="card table-card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">销售趋势</h5>
+        <div class="btn-group btn-group-sm">
+          <button type="button" class="btn btn-outline-secondary active" onclick="loadChart(7)">7天</button>
+          <button type="button" class="btn btn-outline-secondary" onclick="loadChart(30)">30天</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <canvas id="salesChart" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 快捷操作 -->
+  <div class="col-xl-4">
+    <div class="card table-card">
+      <div class="card-header">
+        <h5 class="mb-0">快捷操作</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <a href="/admin/products/add" class="btn btn-outline-primary">
+            <i class="bi bi-plus-lg me-2"></i>添加商品
+          </a>
+          <a href="/admin/cards/import" class="btn btn-outline-success">
+            <i class="bi bi-cloud-upload me-2"></i>导入卡密
+          </a>
+          <a href="/admin/orders" class="btn btn-outline-info">
+            <i class="bi bi-receipt me-2"></i>查看订单
+          </a>
+          <a href="/admin/statistics" class="btn btn-outline-warning">
+            <i class="bi bi-graph-up me-2"></i>数据统计
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 系统信息 -->
+    <div class="card table-card mt-4">
+      <div class="card-header">
+        <h5 class="mb-0">系统信息</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-borderless table-sm mb-0">
+          <tr>
+            <td class="text-muted">系统版本</td>
+            <td class="text-end">v1.0.0</td>
+          </tr>
+          <tr>
+            <td class="text-muted">Node.js版本</td>
+            <td class="text-end">${process.version}</td>
+          </tr>
+          <tr>
+            <td class="text-muted">运行环境</td>
+            <td class="text-end">${process.env.NODE_ENV || 'development'}</td>
+          </tr>
+          <tr>
+            <td class="text-muted">服务器时间</td>
+            <td class="text-end">${new Date().toLocaleString('zh-CN')}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 最近订单 -->
+<div class="card table-card mt-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">最近订单</h5>
+    <a href="/admin/orders" class="btn btn-sm btn-outline-primary">查看全部</a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>订单号</th>
+            <th>商品名称</th>
+            <th>数量</th>
+            <th>金额</th>
+            <th>状态</th>
+            <th>创建时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${recentOrders && recentOrders.length > 0 ? recentOrders.map(order => `
+            <tr>
+              <td><code>${order.order_no}</code></td>
+              <td>${order.product_name}</td>
+              <td>${order.quantity}</td>
+              <td class="text-danger">¥${parseFloat(order.total_amount).toFixed(2)}</td>
+              <td>
+                <span class="badge bg-${
+                  order.status === 'delivered' ? 'success' :
+                  order.status === 'paid' ? 'info' :
+                  order.status === 'pending' ? 'warning' :
+                  order.status === 'cancelled' ? 'secondary' : 'danger'
+                }">
+                  ${order.status === 'delivered' ? '已发货' :
+                    order.status === 'paid' ? '已支付' :
+                    order.status === 'pending' ? '待支付' :
+                    order.status === 'cancelled' ? '已取消' : '已退款'}
+                </span>
+              </td>
+              <td>${new Date(order.created_at).toLocaleString('zh-CN')}</td>
+              <td>
+                <a href="/admin/orders/${order.id}" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-eye"></i>
+                </a>
+              </td>
+            </tr>
+          `).join('') : `
+            <tr>
+              <td colspan="7" class="text-center py-4 text-muted">暂无订单数据</td>
+            </tr>
+          `}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  let salesChart = null;
+
+  function formatMoney(amount) {
+    return '¥' + parseFloat(amount || 0).toFixed(2);
+  }
+
+  async function loadChart(days) {
+    try {
+      const response = await fetch('/api/admin/statistics/trend?days=' + days);
+      const result = await response.json();
+      
+      if (result.code !== 0) throw new Error(result.message);
+
+      const data = result.data;
+      const labels = data.map(d => d.date);
+      const sales = data.map(d => d.sales);
+      const orders = data.map(d => d.orders);
+
+      if (salesChart) salesChart.destroy();
+
+      const ctx = document.getElementById('salesChart').getContext('2d');
+      salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: '销售额',
+              data: sales,
+              borderColor: '#0d6efd',
+              backgroundColor: 'rgba(13, 110, 253, 0.1)',
+              fill: true,
+              tension: 0.4,
+              yAxisID: 'y',
+            },
+            {
+              label: '订单数',
+              data: orders,
+              borderColor: '#198754',
+              backgroundColor: 'transparent',
+              borderDash: [5, 5],
+              tension: 0.4,
+              yAxisID: 'y1',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          scales: {
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              title: { display: true, text: '销售额 (元)' },
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              title: { display: true, text: '订单数' },
+              grid: { drawOnChartArea: false },
+            },
+          },
+        }
+      });
+    } catch (error) {
+      console.error('加载图表失败:', error);
+    }
+  }
+
+  // 初始加载7天数据
+  loadChart(7);
+</script>
+
+` }) %>

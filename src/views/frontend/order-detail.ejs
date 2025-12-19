@@ -1,0 +1,287 @@
+<%- include('../layouts/main', { body: `
+
+<div class="container py-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">首页</a></li>
+      <li class="breadcrumb-item"><a href="/order/query">订单查询</a></li>
+      <li class="breadcrumb-item active">${order.order_no}</li>
+    </ol>
+  </nav>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <!-- 订单状态 -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            ${order.status === 'pending' ? `
+              <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                <i class="bi bi-clock text-white fs-3"></i>
+              </div>
+              <div class="ms-3">
+                <h4 class="mb-1">等待支付</h4>
+                <p class="text-muted mb-0">请在15分钟内完成支付，超时订单将自动取消</p>
+              </div>
+            ` : order.status === 'paid' ? `
+              <div class="rounded-circle bg-info d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                <i class="bi bi-check-lg text-white fs-3"></i>
+              </div>
+              <div class="ms-3">
+                <h4 class="mb-1">支付成功</h4>
+                <p class="text-muted mb-0">系统正在处理中，请稍候...</p>
+              </div>
+            ` : order.status === 'delivered' ? `
+              <div class="rounded-circle bg-success d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                <i class="bi bi-check-all text-white fs-3"></i>
+              </div>
+              <div class="ms-3">
+                <h4 class="mb-1">发货成功</h4>
+                <p class="text-muted mb-0">卡密信息已生成，请查看下方详情</p>
+              </div>
+            ` : order.status === 'cancelled' ? `
+              <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                <i class="bi bi-x-lg text-white fs-3"></i>
+              </div>
+              <div class="ms-3">
+                <h4 class="mb-1">订单已取消</h4>
+                <p class="text-muted mb-0">订单已取消，如有疑问请联系客服</p>
+              </div>
+            ` : order.status === 'refunded' ? `
+              <div class="rounded-circle bg-danger d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                <i class="bi bi-arrow-counterclockwise text-white fs-3"></i>
+              </div>
+              <div class="ms-3">
+                <h4 class="mb-1">已退款</h4>
+                <p class="text-muted mb-0">订单已退款，款项将原路返回</p>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+
+      <!-- 卡密信息 -->
+      ${order.status === 'delivered' && delivery && delivery.cards ? `
+      <div class="card mb-4 border-success">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0"><i class="bi bi-key me-2"></i>卡密信息</h5>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning mb-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            请妥善保存您的卡密信息，本页面关闭后可通过订单号查询
+          </div>
+          <div class="table-responsive">
+            <table class="table table-bordered mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th width="60">#</th>
+                  <th>卡密</th>
+                  <th width="100">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${delivery.cards.map((card, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>
+                      <code class="user-select-all" id="card-${index}">${card.content}</code>
+                    </td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" onclick="copyCard(${index})">
+                        <i class="bi bi-clipboard"></i>
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-3 text-end">
+            <button class="btn btn-outline-primary" onclick="copyAllCards()">
+              <i class="bi bi-clipboard-check me-1"></i>复制全部
+            </button>
+          </div>
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- 待支付操作 -->
+      ${order.status === 'pending' ? `
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">选择支付方式</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <button class="btn btn-outline-primary btn-lg" onclick="pay('alipay')">
+              <i class="bi bi-alipay me-2"></i>支付宝支付
+            </button>
+          </div>
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- 订单信息 -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">订单信息</h5>
+        </div>
+        <div class="card-body">
+          <table class="table table-borderless mb-0">
+            <tr>
+              <td class="text-muted" width="120">订单号</td>
+              <td>${order.order_no}</td>
+            </tr>
+            <tr>
+              <td class="text-muted">商品名称</td>
+              <td>${order.product_name}</td>
+            </tr>
+            <tr>
+              <td class="text-muted">购买数量</td>
+              <td>${order.quantity} 件</td>
+            </tr>
+            <tr>
+              <td class="text-muted">单价</td>
+              <td>¥${parseFloat(order.unit_price).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td class="text-muted">订单金额</td>
+              <td class="text-danger fw-bold fs-5">¥${parseFloat(order.total_amount).toFixed(2)}</td>
+            </tr>
+            ${order.email ? `
+            <tr>
+              <td class="text-muted">联系邮箱</td>
+              <td>${order.email}</td>
+            </tr>
+            ` : ''}
+            <tr>
+              <td class="text-muted">创建时间</td>
+              <td>${new Date(order.created_at).toLocaleString()}</td>
+            </tr>
+            ${order.paid_at ? `
+            <tr>
+              <td class="text-muted">支付时间</td>
+              <td>${new Date(order.paid_at).toLocaleString()}</td>
+            </tr>
+            ` : ''}
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <!-- 帮助信息 -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>常见问题</h5>
+        </div>
+        <div class="card-body">
+          <div class="accordion accordion-flush" id="faqAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                  支付成功但没收到卡密？
+                </button>
+              </h2>
+              <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  支付成功后系统会自动发货，请刷新页面查看。如果长时间未收到，请联系客服处理。
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                  卡密无法使用怎么办？
+                </button>
+              </h2>
+              <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  请先确认卡密输入是否正确，如确认无误仍无法使用，请联系客服并提供订单号。
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                  如何查询历史订单？
+                </button>
+              </h2>
+              <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  您可以通过订单号或购买时填写的邮箱在订单查询页面查询历史订单。
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-body text-center">
+          <i class="bi bi-headset display-4 text-primary"></i>
+          <h5 class="mt-3">需要帮助？</h5>
+          <p class="text-muted mb-3">如有任何问题，请联系客服</p>
+          <a href="/help" class="btn btn-outline-primary">
+            <i class="bi bi-chat-dots me-1"></i>联系客服
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const cards = ${JSON.stringify(delivery?.cards || [])};
+  
+  function copyCard(index) {
+    const text = document.getElementById('card-' + index).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      alert('复制成功');
+    });
+  }
+
+  function copyAllCards() {
+    const text = cards.map(c => c.content).join('\\n');
+    navigator.clipboard.writeText(text).then(() => {
+      alert('全部卡密已复制到剪贴板');
+    });
+  }
+
+  async function pay(channel) {
+    try {
+      const response = await fetch('/api/orders/${order.order_no}/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pay_channel: channel }),
+      });
+
+      const result = await response.json();
+
+      if (result.code !== 0) {
+        throw new Error(result.message);
+      }
+
+      if (result.data.payment.payUrl) {
+        window.location.href = result.data.payment.payUrl;
+      }
+
+    } catch (error) {
+      alert(error.message || '支付发起失败');
+    }
+  }
+
+  // 待支付订单自动刷新检查状态
+  ${order.status === 'pending' || order.status === 'paid' ? `
+  setInterval(async () => {
+    const response = await fetch('/api/orders/${order.order_no}/status');
+    const result = await response.json();
+    if (result.code === 0 && result.data.status !== '${order.status}') {
+      location.reload();
+    }
+  }, 5000);
+  ` : ''}
+</script>
+
+` }) %>

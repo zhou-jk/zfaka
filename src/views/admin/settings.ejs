@@ -1,0 +1,286 @@
+<%- include('../layouts/admin', { 
+  currentPage: 'settings',
+  pageTitle: '系统设置',
+  user: user,
+  body: `
+
+<div class="mb-4">
+  <h4 class="mb-0">系统设置</h4>
+  <small class="text-muted">配置系统基本参数</small>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <form id="settingsForm">
+      <!-- 基本设置 -->
+      <div class="card table-card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-gear me-2"></i>基本设置</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">网站名称</label>
+            <input type="text" class="form-control" name="site_name" value="${settings?.site_name || '自动售货系统'}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">网站描述</label>
+            <textarea class="form-control" name="site_description" rows="2">${settings?.site_description || ''}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">网站关键词</label>
+            <input type="text" class="form-control" name="site_keywords" value="${settings?.site_keywords || ''}" placeholder="多个关键词用逗号分隔">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">备案号</label>
+            <input type="text" class="form-control" name="icp_number" value="${settings?.icp_number || ''}" placeholder="例如：京ICP备XXXXXXXX号">
+          </div>
+        </div>
+      </div>
+
+      <!-- 订单设置 -->
+      <div class="card table-card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>订单设置</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">订单超时时间 (分钟)</label>
+              <input type="number" class="form-control" name="order_timeout" value="${settings?.order_timeout || 15}" min="5" max="60">
+              <small class="text-muted">未支付订单自动取消时间</small>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">订单号前缀</label>
+              <input type="text" class="form-control" name="order_prefix" value="${settings?.order_prefix || ''}" placeholder="例如：ORD">
+            </div>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="email_notify" name="email_notify" ${settings?.email_notify ? 'checked' : ''}>
+            <label class="form-check-label" for="email_notify">订单支付成功后发送邮件通知</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 支付设置 -->
+      <div class="card table-card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>支付设置</h5>
+        </div>
+        <div class="card-body">
+          <h6 class="text-primary mb-3"><i class="bi bi-alipay me-1"></i>支付宝配置</h6>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">AppID</label>
+              <input type="text" class="form-control" name="alipay_app_id" value="${settings?.alipay_app_id || ''}">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">网关地址</label>
+              <select class="form-select" name="alipay_gateway">
+                <option value="https://openapi.alipaydev.com/gateway.do" ${settings?.alipay_gateway?.includes('dev') ? 'selected' : ''}>沙箱环境</option>
+                <option value="https://openapi.alipay.com/gateway.do" ${!settings?.alipay_gateway?.includes('dev') && settings?.alipay_gateway ? 'selected' : ''}>正式环境</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">应用私钥</label>
+            <textarea class="form-control font-monospace" name="alipay_private_key" rows="3" placeholder="请填写应用私钥">${settings?.alipay_private_key || ''}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">支付宝公钥</label>
+            <textarea class="form-control font-monospace" name="alipay_public_key" rows="3" placeholder="请填写支付宝公钥">${settings?.alipay_public_key || ''}</textarea>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="alipay_enabled" name="alipay_enabled" ${settings?.alipay_enabled !== false ? 'checked' : ''}>
+            <label class="form-check-label" for="alipay_enabled">启用支付宝支付</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 邮件设置 -->
+      <div class="card table-card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>邮件设置</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">SMTP服务器</label>
+              <input type="text" class="form-control" name="smtp_host" value="${settings?.smtp_host || ''}" placeholder="例如：smtp.qq.com">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">端口</label>
+              <input type="number" class="form-control" name="smtp_port" value="${settings?.smtp_port || 465}">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">加密方式</label>
+              <select class="form-select" name="smtp_secure">
+                <option value="true" ${settings?.smtp_secure !== false ? 'selected' : ''}>SSL</option>
+                <option value="false" ${settings?.smtp_secure === false ? 'selected' : ''}>无</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">发件邮箱</label>
+              <input type="email" class="form-control" name="smtp_user" value="${settings?.smtp_user || ''}" placeholder="your@email.com">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">邮箱密码/授权码</label>
+              <input type="password" class="form-control" name="smtp_pass" value="${settings?.smtp_pass || ''}" placeholder="授权码">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">发件人名称</label>
+            <input type="text" class="form-control" name="smtp_from_name" value="${settings?.smtp_from_name || '自动售货系统'}">
+          </div>
+          <button type="button" class="btn btn-outline-primary" onclick="testEmail()">
+            <i class="bi bi-send me-2"></i>发送测试邮件
+          </button>
+        </div>
+      </div>
+
+      <!-- 提交按钮 -->
+      <div class="d-grid gap-2 d-md-flex">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="bi bi-check-lg me-2"></i>保存设置
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-lg" onclick="location.reload()">
+          <i class="bi bi-arrow-clockwise me-2"></i>重置
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-4">
+    <!-- 缓存管理 -->
+    <div class="card table-card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>缓存管理</h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small">清除系统缓存可以解决部分数据不同步问题</p>
+        <div class="d-grid gap-2">
+          <button type="button" class="btn btn-outline-warning" onclick="clearCache('product')">
+            <i class="bi bi-box me-2"></i>清除商品缓存
+          </button>
+          <button type="button" class="btn btn-outline-warning" onclick="clearCache('config')">
+            <i class="bi bi-gear me-2"></i>清除配置缓存
+          </button>
+          <button type="button" class="btn btn-outline-danger" onclick="clearCache('all')">
+            <i class="bi bi-trash me-2"></i>清除所有缓存
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 系统信息 -->
+    <div class="card table-card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>系统信息</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-borderless table-sm mb-0">
+          <tr>
+            <td class="text-muted">系统版本</td>
+            <td class="text-end">v1.0.0</td>
+          </tr>
+          <tr>
+            <td class="text-muted">Node.js版本</td>
+            <td class="text-end">${process.version}</td>
+          </tr>
+          <tr>
+            <td class="text-muted">运行环境</td>
+            <td class="text-end">${process.env.NODE_ENV || 'development'}</td>
+          </tr>
+          <tr>
+            <td class="text-muted">操作系统</td>
+            <td class="text-end">${process.platform}</td>
+          </tr>
+          <tr>
+            <td class="text-muted">服务器时间</td>
+            <td class="text-end">${new Date().toLocaleString('zh-CN')}</td>
+          </tr>
+          <tr>
+            <td class="text-muted">内存使用</td>
+            <td class="text-end">${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = this.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+    
+    try {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>保存中...';
+
+      const formData = new FormData(this);
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      // 处理checkbox
+      data.email_notify = document.getElementById('email_notify').checked;
+      data.alipay_enabled = document.getElementById('alipay_enabled').checked;
+      data.smtp_secure = data.smtp_secure === 'true';
+
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.code !== 0) {
+        throw new Error(result.message);
+      }
+
+      showAlert('设置已保存');
+
+    } catch (error) {
+      showAlert(error.message || '保存失败', 'danger');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  });
+
+  async function testEmail() {
+    try {
+      const response = await fetch('/api/admin/settings/test-email', {
+        method: 'POST',
+      });
+      const result = await response.json();
+      if (result.code !== 0) throw new Error(result.message);
+      showAlert('测试邮件已发送');
+    } catch (error) {
+      showAlert(error.message || '发送失败', 'danger');
+    }
+  }
+
+  async function clearCache(type) {
+    try {
+      const response = await fetch('/api/admin/cache/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      });
+      const result = await response.json();
+      if (result.code !== 0) throw new Error(result.message);
+      showAlert('缓存已清除');
+    } catch (error) {
+      showAlert(error.message || '清除失败', 'danger');
+    }
+  }
+</script>
+
+` }) %>

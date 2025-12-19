@@ -1,0 +1,236 @@
+<%- include('../layouts/admin', { 
+  currentPage: 'products',
+  pageTitle: product ? '编辑商品' : '添加商品',
+  user: user,
+  body: `
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/admin/products">商品列表</a></li>
+        <li class="breadcrumb-item active">${product ? '编辑商品' : '添加商品'}</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<form id="productForm" enctype="multipart/form-data">
+  <div class="row">
+    <div class="col-lg-8">
+      <!-- 基本信息 -->
+      <div class="card table-card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">基本信息</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">商品名称 <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="name" value="${product?.name || ''}" required>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">商品分类 <span class="text-danger">*</span></label>
+              <select class="form-select" name="category_id" required>
+                <option value="">请选择分类</option>
+                ${categories?.map(c => `
+                  <option value="${c.id}" ${product?.category_id == c.id ? 'selected' : ''}>${c.name}</option>
+                `).join('') || ''}
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">商品类型</label>
+              <select class="form-select" name="type">
+                <option value="card" ${product?.type === 'card' ? 'selected' : ''}>卡密商品</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">商品简介</label>
+            <textarea class="form-control" name="description" rows="3">${product?.description || ''}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">商品详情</label>
+            <textarea class="form-control" name="content" rows="6">${product?.content || ''}</textarea>
+            <small class="text-muted">支持HTML格式</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- 价格库存 -->
+      <div class="card table-card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">价格库存</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">销售价格 <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">¥</span>
+                <input type="number" step="0.01" min="0" class="form-control" name="price" 
+                       value="${product?.price || ''}" required>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">原价 (可选)</label>
+              <div class="input-group">
+                <span class="input-group-text">¥</span>
+                <input type="number" step="0.01" min="0" class="form-control" name="original_price" 
+                       value="${product?.original_price || ''}">
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">成本价 (可选)</label>
+              <div class="input-group">
+                <span class="input-group-text">¥</span>
+                <input type="number" step="0.01" min="0" class="form-control" name="cost_price" 
+                       value="${product?.cost_price || ''}">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">单次最小购买数量</label>
+              <input type="number" min="1" class="form-control" name="min_quantity" 
+                     value="${product?.min_quantity || 1}">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">单次最大购买数量</label>
+              <input type="number" min="1" class="form-control" name="max_quantity" 
+                     value="${product?.max_quantity || 10}">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">当前库存</label>
+              <input type="text" class="form-control" value="${product?.stock_count || 0}" disabled>
+              <small class="text-muted">库存由卡密数量决定</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <!-- 商品图片 -->
+      <div class="card table-card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">商品图片</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <div id="imagePreview" class="border rounded mb-3 d-flex align-items-center justify-content-center bg-light" 
+                 style="height: 200px; cursor: pointer;" onclick="document.getElementById('imageInput').click()">
+              ${product?.image ? `
+                <img src="${product.image}" class="img-fluid" style="max-height: 200px;">
+              ` : `
+                <div class="text-center text-muted">
+                  <i class="bi bi-cloud-upload display-4"></i>
+                  <div>点击上传图片</div>
+                </div>
+              `}
+            </div>
+            <input type="file" id="imageInput" name="image" accept="image/*" class="d-none" onchange="previewImage(this)">
+            <input type="hidden" name="image_url" value="${product?.image || ''}">
+          </div>
+        </div>
+      </div>
+
+      <!-- 商品状态 -->
+      <div class="card table-card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">商品状态</h5>
+        </div>
+        <div class="card-body">
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="status" name="status" 
+                   ${product?.status !== 0 ? 'checked' : ''}>
+            <label class="form-check-label" for="status">上架销售</label>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="is_hot" name="is_hot" 
+                   ${product?.is_hot ? 'checked' : ''}>
+            <label class="form-check-label" for="is_hot">热门商品</label>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="is_recommend" name="is_recommend" 
+                   ${product?.is_recommend ? 'checked' : ''}>
+            <label class="form-check-label" for="is_recommend">推荐商品</label>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">排序权重</label>
+            <input type="number" class="form-control" name="sort_order" 
+                   value="${product?.sort_order || 0}">
+            <small class="text-muted">数值越大越靠前</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- 提交按钮 -->
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="bi bi-check-lg me-2"></i>${product ? '保存修改' : '添加商品'}
+        </button>
+        <a href="/admin/products" class="btn btn-outline-secondary">取消</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<script>
+  function previewImage(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('imagePreview').innerHTML = 
+          '<img src="' + e.target.result + '" class="img-fluid" style="max-height: 200px;">';
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  document.getElementById('productForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = this.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+    
+    try {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>保存中...';
+
+      const formData = new FormData(this);
+      
+      // 处理checkbox
+      formData.set('status', formData.has('status') && this.querySelector('#status').checked ? 1 : 0);
+      formData.set('is_hot', formData.has('is_hot') && this.querySelector('#is_hot').checked ? 1 : 0);
+      formData.set('is_recommend', formData.has('is_recommend') && this.querySelector('#is_recommend').checked ? 1 : 0);
+
+      const isEdit = ${product ? 'true' : 'false'};
+      const url = isEdit ? '/api/admin/products/${product?.id || ''}' : '/api/admin/products';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.code !== 0) {
+        throw new Error(result.message);
+      }
+
+      showAlert('${product ? '商品已更新' : '商品已添加'}');
+      setTimeout(() => {
+        window.location.href = '/admin/products';
+      }, 1000);
+
+    } catch (error) {
+      showAlert(error.message || '保存失败', 'danger');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  });
+</script>
+
+` }) %>

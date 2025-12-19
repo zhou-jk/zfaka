@@ -1,0 +1,203 @@
+<%- include('../layouts/admin', { 
+  currentPage: 'logs',
+  pageTitle: '操作日志',
+  user: user,
+  body: `
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="mb-0">操作日志</h4>
+    <small class="text-muted">查看系统操作记录</small>
+  </div>
+  <button type="button" class="btn btn-outline-danger" onclick="clearLogs()">
+    <i class="bi bi-trash me-2"></i>清空日志
+  </button>
+</div>
+
+<!-- 搜索筛选 -->
+<div class="card table-card mb-4">
+  <div class="card-body">
+    <form id="searchForm" class="row g-3">
+      <div class="col-md-2">
+        <select class="form-select" name="module">
+          <option value="">全部模块</option>
+          <option value="user" ${query?.module === 'user' ? 'selected' : ''}>用户</option>
+          <option value="product" ${query?.module === 'product' ? 'selected' : ''}>商品</option>
+          <option value="card" ${query?.module === 'card' ? 'selected' : ''}>卡密</option>
+          <option value="order" ${query?.module === 'order' ? 'selected' : ''}>订单</option>
+          <option value="payment" ${query?.module === 'payment' ? 'selected' : ''}>支付</option>
+          <option value="system" ${query?.module === 'system' ? 'selected' : ''}>系统</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select class="form-select" name="action">
+          <option value="">全部操作</option>
+          <option value="create" ${query?.action === 'create' ? 'selected' : ''}>创建</option>
+          <option value="update" ${query?.action === 'update' ? 'selected' : ''}>更新</option>
+          <option value="delete" ${query?.action === 'delete' ? 'selected' : ''}>删除</option>
+          <option value="login" ${query?.action === 'login' ? 'selected' : ''}>登录</option>
+          <option value="logout" ${query?.action === 'logout' ? 'selected' : ''}>登出</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <input type="text" class="form-control" name="operator" placeholder="操作人" value="${query?.operator || ''}">
+      </div>
+      <div class="col-md-2">
+        <input type="date" class="form-control" name="start_date" value="${query?.start_date || ''}">
+      </div>
+      <div class="col-md-2">
+        <input type="date" class="form-control" name="end_date" value="${query?.end_date || ''}">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-search me-1"></i>搜索
+        </button>
+        <a href="/admin/logs" class="btn btn-outline-secondary">重置</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 日志列表 -->
+<div class="card table-card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th width="60">ID</th>
+            <th>模块</th>
+            <th>操作</th>
+            <th>操作人</th>
+            <th>描述</th>
+            <th>IP地址</th>
+            <th>操作时间</th>
+            <th width="60">详情</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logs && logs.length > 0 ? logs.map(log => `
+            <tr>
+              <td>${log.id}</td>
+              <td>
+                <span class="badge bg-${
+                  log.module === 'order' ? 'success' :
+                  log.module === 'payment' ? 'primary' :
+                  log.module === 'product' ? 'info' :
+                  log.module === 'card' ? 'warning' :
+                  log.module === 'user' ? 'secondary' : 'dark'
+                }">
+                  ${log.module === 'order' ? '订单' :
+                    log.module === 'payment' ? '支付' :
+                    log.module === 'product' ? '商品' :
+                    log.module === 'card' ? '卡密' :
+                    log.module === 'user' ? '用户' : '系统'}
+                </span>
+              </td>
+              <td>
+                <span class="badge bg-${
+                  log.action === 'create' ? 'success' :
+                  log.action === 'update' ? 'info' :
+                  log.action === 'delete' ? 'danger' :
+                  log.action === 'login' ? 'primary' : 'secondary'
+                }-subtle text-${
+                  log.action === 'create' ? 'success' :
+                  log.action === 'update' ? 'info' :
+                  log.action === 'delete' ? 'danger' :
+                  log.action === 'login' ? 'primary' : 'secondary'
+                }">
+                  ${log.action === 'create' ? '创建' :
+                    log.action === 'update' ? '更新' :
+                    log.action === 'delete' ? '删除' :
+                    log.action === 'login' ? '登录' :
+                    log.action === 'logout' ? '登出' : log.action}
+                </span>
+              </td>
+              <td>${log.operator || '-'}</td>
+              <td class="text-truncate" style="max-width: 300px;" title="${log.description || ''}">${log.description || '-'}</td>
+              <td><small class="text-muted">${log.ip || '-'}</small></td>
+              <td>${new Date(log.created_at).toLocaleString('zh-CN')}</td>
+              <td>
+                ${log.detail ? `
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick='showDetail(${JSON.stringify(log.detail)})'>
+                    <i class="bi bi-eye"></i>
+                  </button>
+                ` : '-'}
+              </td>
+            </tr>
+          `).join('') : `
+            <tr>
+              <td colspan="8" class="text-center py-4 text-muted">暂无日志数据</td>
+            </tr>
+          `}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- 分页 -->
+  ${pagination && pagination.totalPages > 1 ? `
+  <div class="card-footer bg-white">
+    <div class="d-flex justify-content-between align-items-center">
+      <small class="text-muted">共 ${pagination.total} 条记录</small>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item ${pagination.page <= 1 ? 'disabled' : ''}">
+            <a class="page-link" href="?page=${pagination.page - 1}">上一页</a>
+          </li>
+          ${Array.from({length: Math.min(5, pagination.totalPages)}, (_, i) => {
+            const p = pagination.page <= 3 ? i + 1 : pagination.page - 2 + i;
+            if (p > pagination.totalPages) return '';
+            return `<li class="page-item ${p === pagination.page ? 'active' : ''}">
+              <a class="page-link" href="?page=${p}">${p}</a>
+            </li>`;
+          }).join('')}
+          <li class="page-item ${pagination.page >= pagination.totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="?page=${pagination.page + 1}">下一页</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+  ` : ''}
+</div>
+
+<!-- 详情弹窗 -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">详细信息</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <pre id="detailContent" class="bg-light p-3 rounded" style="max-height: 400px; overflow: auto;"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showDetail(detail) {
+    document.getElementById('detailContent').textContent = JSON.stringify(detail, null, 2);
+    new bootstrap.Modal(document.getElementById('detailModal')).show();
+  }
+
+  async function clearLogs() {
+    confirmDelete('确定要清空所有日志吗？此操作不可恢复。', async () => {
+      try {
+        const response = await fetch('/api/admin/logs/clear', {
+          method: 'POST',
+        });
+        const result = await response.json();
+        if (result.code !== 0) throw new Error(result.message);
+        showAlert('日志已清空');
+        location.reload();
+      } catch (error) {
+        showAlert(error.message || '操作失败', 'danger');
+      }
+    });
+  }
+</script>
+
+` }) %>
