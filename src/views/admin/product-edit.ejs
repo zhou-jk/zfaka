@@ -1,7 +1,7 @@
 <%- include('../layouts/admin', { 
   currentPage: 'products',
   pageTitle: product ? '编辑商品' : '添加商品',
-  user: user,
+  user: currentUser,
   body: `
 
 <div class="d-flex justify-content-between align-items-center mb-4">
