@@ -120,7 +120,7 @@
                 <td><%= new Date(card.created_at).toLocaleString('zh-CN') %></td>
                 <td>
                   <div class="btn-group btn-group-sm">
-                    <button type="button" class="btn btn-outline-primary" title="复制卡密" onclick="copyCard('<%= (card.card_code || '').replace(/'/g, "\\'\" ) %>')">
+                    <button type="button" class="btn btn-outline-primary" title="复制卡密" onclick="copyCard(this)" data-code="<%= (card.card_code || '').replace(/"/g, '&quot;') %>">
                       <i class="bi bi-clipboard"></i>
                     </button>
                     <% if (card.status === 0) { %>
@@ -196,7 +196,8 @@
     updateSelection();
   }
 
-  function copyCard(content) {
+  function copyCard(btn) {
+    const content = btn.dataset.code || '';
     navigator.clipboard.writeText(content).then(() => {
       showAlert('已复制到剪贴板');
     });
