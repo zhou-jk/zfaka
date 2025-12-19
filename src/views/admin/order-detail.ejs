@@ -1,29 +1,29 @@
-<%- include('../layouts/admin', { 
-  currentPage: 'orders',
-  pageTitle: '订单详情',
-  user: currentUser,
-  body: `
+<% 
+  var currentPage = 'orders';
+  var pageTitle = '订单详情';
+%>
+<%- include('partials/header') %>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb mb-0">
         <li class="breadcrumb-item"><a href="/admin/orders">订单列表</a></li>
-        <li class="breadcrumb-item active">${order.order_no}</li>
+        <li class="breadcrumb-item active"><%= order.order_no %></li>
       </ol>
     </nav>
   </div>
   <div>
-    ${order.status === 'pending' ? `
+    <% if (order.status === 'pending') { %>
       <button type="button" class="btn btn-outline-secondary" onclick="cancelOrder()">
         <i class="bi bi-x-circle me-2"></i>取消订单
       </button>
-    ` : ''}
-    ${order.status === 'delivered' ? `
+    <% } %>
+    <% if (order.status === 'delivered') { %>
       <button type="button" class="btn btn-outline-danger" onclick="refundOrder()">
         <i class="bi bi-arrow-counterclockwise me-2"></i>退款
       </button>
-    ` : ''}
+    <% } %>
   </div>
 </div>
 
@@ -33,27 +33,14 @@
     <div class="card table-card mb-4">
       <div class="card-body">
         <div class="d-flex align-items-center">
-          <div class="rounded-circle d-flex align-items-center justify-content-center bg-${
-            order.status === 'delivered' ? 'success' :
-            order.status === 'paid' ? 'info' :
-            order.status === 'pending' ? 'warning' :
-            order.status === 'cancelled' ? 'secondary' : 'danger'
-          } text-white" style="width: 50px; height: 50px;">
-            <i class="bi bi-${
-              order.status === 'delivered' ? 'check-all' :
-              order.status === 'paid' ? 'check' :
-              order.status === 'pending' ? 'clock' :
-              order.status === 'cancelled' ? 'x' : 'arrow-counterclockwise'
-            } fs-4"></i>
+          <div class="rounded-circle d-flex align-items-center justify-content-center bg-<%= order.status === 'delivered' ? 'success' : order.status === 'paid' ? 'info' : order.status === 'pending' ? 'warning' : order.status === 'cancelled' ? 'secondary' : 'danger' %> text-white" style="width: 50px; height: 50px;">
+            <i class="bi bi-<%= order.status === 'delivered' ? 'check-all' : order.status === 'paid' ? 'check' : order.status === 'pending' ? 'clock' : order.status === 'cancelled' ? 'x' : 'arrow-counterclockwise' %> fs-4"></i>
           </div>
           <div class="ms-3">
             <h5 class="mb-1">
-              ${order.status === 'delivered' ? '已发货' :
-                order.status === 'paid' ? '已支付，待发货' :
-                order.status === 'pending' ? '待支付' :
-                order.status === 'cancelled' ? '已取消' : '已退款'}
+              <%= order.status === 'delivered' ? '已发货' : order.status === 'paid' ? '已支付，待发货' : order.status === 'pending' ? '待支付' : order.status === 'cancelled' ? '已取消' : '已退款' %>
             </h5>
-            <small class="text-muted">订单号：${order.order_no}</small>
+            <small class="text-muted">订单号：<%= order.order_no %></small>
           </div>
         </div>
       </div>
@@ -70,23 +57,23 @@
             <table class="table table-borderless mb-0">
               <tr>
                 <td class="text-muted" width="100">订单号</td>
-                <td><code>${order.order_no}</code></td>
+                <td><code><%= order.order_no %></code></td>
               </tr>
               <tr>
                 <td class="text-muted">商品名称</td>
-                <td>${order.product_name}</td>
+                <td><%= order.product_name %></td>
               </tr>
               <tr>
                 <td class="text-muted">购买数量</td>
-                <td>${order.quantity} 件</td>
+                <td><%= order.quantity %> 件</td>
               </tr>
               <tr>
                 <td class="text-muted">单价</td>
-                <td>¥${parseFloat(order.unit_price).toFixed(2)}</td>
+                <td>¥<%= parseFloat(order.unit_price).toFixed(2) %></td>
               </tr>
               <tr>
                 <td class="text-muted">订单金额</td>
-                <td class="text-danger fw-bold fs-5">¥${parseFloat(order.total_amount).toFixed(2)}</td>
+                <td class="text-danger fw-bold fs-5">¥<%= parseFloat(order.total_amount).toFixed(2) %></td>
               </tr>
             </table>
           </div>
@@ -94,23 +81,23 @@
             <table class="table table-borderless mb-0">
               <tr>
                 <td class="text-muted" width="100">联系邮箱</td>
-                <td>${order.email || '-'}</td>
+                <td><%= order.email || '-' %></td>
               </tr>
               <tr>
                 <td class="text-muted">客户IP</td>
-                <td>${order.client_ip || '-'}</td>
+                <td><%= order.client_ip || '-' %></td>
               </tr>
               <tr>
                 <td class="text-muted">创建时间</td>
-                <td>${new Date(order.created_at).toLocaleString('zh-CN')}</td>
+                <td><%= new Date(order.created_at).toLocaleString('zh-CN') %></td>
               </tr>
               <tr>
                 <td class="text-muted">支付时间</td>
-                <td>${order.paid_at ? new Date(order.paid_at).toLocaleString('zh-CN') : '-'}</td>
+                <td><%= order.paid_at ? new Date(order.paid_at).toLocaleString('zh-CN') : '-' %></td>
               </tr>
               <tr>
                 <td class="text-muted">更新时间</td>
-                <td>${new Date(order.updated_at).toLocaleString('zh-CN')}</td>
+                <td><%= new Date(order.updated_at).toLocaleString('zh-CN') %></td>
               </tr>
             </table>
           </div>
@@ -119,7 +106,7 @@
     </div>
 
     <!-- 支付信息 -->
-    ${payment ? `
+    <% if (payment) { %>
     <div class="card table-card mb-4">
       <div class="card-header">
         <h5 class="mb-0">支付信息</h5>
@@ -129,36 +116,36 @@
           <tr>
             <td class="text-muted" width="120">支付渠道</td>
             <td>
-              <span class="badge bg-primary">${payment.channel === 'alipay' ? '支付宝' : payment.channel}</span>
+              <span class="badge bg-primary"><%= payment.channel === 'alipay' ? '支付宝' : payment.channel %></span>
             </td>
           </tr>
           <tr>
             <td class="text-muted">支付流水号</td>
-            <td><code>${payment.trade_no || '-'}</code></td>
+            <td><code><%= payment.trade_no || '-' %></code></td>
           </tr>
           <tr>
             <td class="text-muted">支付金额</td>
-            <td>¥${parseFloat(payment.amount).toFixed(2)}</td>
+            <td>¥<%= parseFloat(payment.amount).toFixed(2) %></td>
           </tr>
           <tr>
             <td class="text-muted">支付状态</td>
             <td>
-              <span class="badge bg-${payment.status === 'success' ? 'success' : payment.status === 'pending' ? 'warning' : 'danger'}">
-                ${payment.status === 'success' ? '成功' : payment.status === 'pending' ? '待支付' : '失败'}
+              <span class="badge bg-<%= payment.status === 'success' ? 'success' : payment.status === 'pending' ? 'warning' : 'danger' %>">
+                <%= payment.status === 'success' ? '成功' : payment.status === 'pending' ? '待支付' : '失败' %>
               </span>
             </td>
           </tr>
           <tr>
             <td class="text-muted">支付时间</td>
-            <td>${payment.paid_at ? new Date(payment.paid_at).toLocaleString('zh-CN') : '-'}</td>
+            <td><%= payment.paid_at ? new Date(payment.paid_at).toLocaleString('zh-CN') : '-' %></td>
           </tr>
         </table>
       </div>
     </div>
-    ` : ''}
+    <% } %>
 
     <!-- 卡密信息 -->
-    ${delivery && delivery.cards && delivery.cards.length > 0 ? `
+    <% if (delivery && delivery.cards && delivery.cards.length > 0) { %>
     <div class="card table-card mb-4">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">发货卡密</h5>
@@ -177,23 +164,23 @@
               </tr>
             </thead>
             <tbody>
-              ${delivery.cards.map((card, index) => `
+              <% delivery.cards.forEach(function(card, index) { %>
                 <tr>
-                  <td>${index + 1}</td>
-                  <td><code class="user-select-all" id="card-${index}">${card.content}</code></td>
+                  <td><%= index + 1 %></td>
+                  <td><code class="user-select-all" id="card-<%= index %>"><%= card.content %></code></td>
                   <td>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyCard(${index})">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyCard(<%= index %>)">
                       <i class="bi bi-clipboard"></i>
                     </button>
                   </td>
                 </tr>
-              `).join('')}
+              <% }); %>
             </tbody>
           </table>
         </div>
       </div>
     </div>
-    ` : ''}
+    <% } %>
   </div>
 
   <div class="col-lg-4">
@@ -208,45 +195,45 @@
             <div class="timeline-marker bg-primary"></div>
             <div class="timeline-content">
               <div class="small fw-medium">创建订单</div>
-              <small class="text-muted">${new Date(order.created_at).toLocaleString('zh-CN')}</small>
+              <small class="text-muted"><%= new Date(order.created_at).toLocaleString('zh-CN') %></small>
             </div>
           </div>
-          ${order.paid_at ? `
+          <% if (order.paid_at) { %>
           <div class="timeline-item">
             <div class="timeline-marker bg-success"></div>
             <div class="timeline-content">
               <div class="small fw-medium">支付成功</div>
-              <small class="text-muted">${new Date(order.paid_at).toLocaleString('zh-CN')}</small>
+              <small class="text-muted"><%= new Date(order.paid_at).toLocaleString('zh-CN') %></small>
             </div>
           </div>
-          ` : ''}
-          ${order.status === 'delivered' ? `
+          <% } %>
+          <% if (order.status === 'delivered') { %>
           <div class="timeline-item">
             <div class="timeline-marker bg-info"></div>
             <div class="timeline-content">
               <div class="small fw-medium">自动发货</div>
-              <small class="text-muted">${delivery?.delivered_at ? new Date(delivery.delivered_at).toLocaleString('zh-CN') : '-'}</small>
+              <small class="text-muted"><%= delivery?.delivered_at ? new Date(delivery.delivered_at).toLocaleString('zh-CN') : '-' %></small>
             </div>
           </div>
-          ` : ''}
-          ${order.status === 'cancelled' ? `
+          <% } %>
+          <% if (order.status === 'cancelled') { %>
           <div class="timeline-item">
             <div class="timeline-marker bg-secondary"></div>
             <div class="timeline-content">
               <div class="small fw-medium">订单取消</div>
-              <small class="text-muted">${new Date(order.updated_at).toLocaleString('zh-CN')}</small>
+              <small class="text-muted"><%= new Date(order.updated_at).toLocaleString('zh-CN') %></small>
             </div>
           </div>
-          ` : ''}
-          ${order.status === 'refunded' ? `
+          <% } %>
+          <% if (order.status === 'refunded') { %>
           <div class="timeline-item">
             <div class="timeline-marker bg-danger"></div>
             <div class="timeline-content">
               <div class="small fw-medium">订单退款</div>
-              <small class="text-muted">${new Date(order.updated_at).toLocaleString('zh-CN')}</small>
+              <small class="text-muted"><%= new Date(order.updated_at).toLocaleString('zh-CN') %></small>
             </div>
           </div>
-          ` : ''}
+          <% } %>
         </div>
       </div>
     </div>
@@ -257,7 +244,7 @@
         <h5 class="mb-0">管理备注</h5>
       </div>
       <div class="card-body">
-        <textarea class="form-control" id="remark" rows="3" placeholder="添加备注...">${order.remark || ''}</textarea>
+        <textarea class="form-control" id="remark" rows="3" placeholder="添加备注..."><%= order.remark || '' %></textarea>
         <button type="button" class="btn btn-sm btn-primary mt-2" onclick="saveRemark()">保存备注</button>
       </div>
     </div>
@@ -289,7 +276,7 @@
 </style>
 
 <script>
-  const cards = ${JSON.stringify(delivery?.cards || [])};
+  const cards = <%- JSON.stringify(delivery?.cards || []) %>;
 
   function copyCard(index) {
     const text = document.getElementById('card-' + index).textContent;
@@ -299,7 +286,7 @@
   }
 
   function copyAllCards() {
-    const text = cards.map(c => c.content).join('\\n');
+    const text = cards.map(c => c.content).join('\n');
     navigator.clipboard.writeText(text).then(() => {
       showAlert('全部卡密已复制到剪贴板');
     });
@@ -308,7 +295,7 @@
   async function cancelOrder() {
     confirmDelete('确定要取消该订单吗？', async () => {
       try {
-        const response = await fetch('/api/admin/orders/${order.id}/cancel', {
+        const response = await fetch('/api/admin/orders/<%= order.id %>/cancel', {
           method: 'POST',
         });
         const result = await response.json();
@@ -324,7 +311,7 @@
   async function refundOrder() {
     confirmDelete('确定要退款吗？退款后卡密将被作废。', async () => {
       try {
-        const response = await fetch('/api/admin/orders/${order.id}/refund', {
+        const response = await fetch('/api/admin/orders/<%= order.id %>/refund', {
           method: 'POST',
         });
         const result = await response.json();
@@ -340,7 +327,7 @@
   async function saveRemark() {
     try {
       const remark = document.getElementById('remark').value;
-      const response = await fetch('/api/admin/orders/${order.id}/remark', {
+      const response = await fetch('/api/admin/orders/<%= order.id %>/remark', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ remark }),
@@ -354,4 +341,4 @@
   }
 </script>
 
-` }) %>
+<%- include('partials/footer') %>

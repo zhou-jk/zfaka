@@ -1,8 +1,8 @@
-<%- include('../layouts/admin', { 
-  currentPage: 'statistics',
-  pageTitle: '数据统计',
-  user: currentUser,
-  body: `
+<% 
+  var currentPage = 'statistics';
+  var pageTitle = '数据统计';
+%>
+<%- include('partials/header') %>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
@@ -289,12 +289,12 @@
     // 更新图例
     let legendHtml = '';
     channels.forEach((c, i) => {
-      legendHtml += \`
+      legendHtml += `
         <div class="d-flex justify-content-between mb-2">
-          <span><span class="badge me-2" style="background-color: \${colors[i]}">　</span>\${c.channel === 'alipay' ? '支付宝' : c.channel}</span>
-          <span class="fw-bold">¥\${parseFloat(c.amount).toFixed(2)}</span>
+          <span><span class="badge me-2" style="background-color: ${colors[i]}">　</span>${c.channel === 'alipay' ? '支付宝' : c.channel}</span>
+          <span class="fw-bold">¥${parseFloat(c.amount).toFixed(2)}</span>
         </div>
-      \`;
+      `;
     });
     document.getElementById('channelLegend').innerHTML = legendHtml || '<div class="text-muted text-center">暂无数据</div>';
   }
@@ -306,16 +306,16 @@
       return;
     }
 
-    tbody.innerHTML = products.map((p, i) => \`
+    tbody.innerHTML = products.map((p, i) => `
       <tr>
         <td>
-          <span class="badge bg-\${i < 3 ? ['danger', 'warning', 'info'][i] : 'secondary'}">\${i + 1}</span>
+          <span class="badge bg-${i < 3 ? ['danger', 'warning', 'info'][i] : 'secondary'}">${i + 1}</span>
         </td>
-        <td>\${p.name}</td>
-        <td>\${p.sales}</td>
-        <td class="text-danger">¥\${parseFloat(p.amount).toFixed(2)}</td>
+        <td>${p.name}</td>
+        <td>${p.sales}</td>
+        <td class="text-danger">¥${parseFloat(p.amount).toFixed(2)}</td>
       </tr>
-    \`).join('');
+    `).join('');
   }
 
   function updateStatusChart(statusDist) {
@@ -355,12 +355,12 @@
     let statsHtml = '';
     Object.entries(statusDist).forEach(([status, count]) => {
       const info = statusMap[status] || { label: status, color: '#6c757d' };
-      statsHtml += \`
+      statsHtml += `
         <div class="col">
-          <div class="fs-4 fw-bold" style="color: \${info.color}">\${count}</div>
-          <small class="text-muted">\${info.label}</small>
+          <div class="fs-4 fw-bold" style="color: ${info.color}">${count}</div>
+          <small class="text-muted">${info.label}</small>
         </div>
-      \`;
+      `;
     });
     document.getElementById('statusStats').innerHTML = statsHtml || '<div class="col text-muted">暂无数据</div>';
   }
@@ -369,4 +369,4 @@
   loadData(7);
 </script>
 
-` }) %>
+<%- include('partials/footer') %>

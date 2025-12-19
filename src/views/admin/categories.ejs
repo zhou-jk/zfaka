@@ -1,8 +1,8 @@
-<%- include('../layouts/admin', { 
-  currentPage: 'categories',
-  pageTitle: '商品分类',
-  user: currentUser,
-  body: `
+<% 
+  var currentPage = 'categories';
+  var pageTitle = '商品分类';
+%>
+<%- include('partials/header') %>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
@@ -31,40 +31,42 @@
           </tr>
         </thead>
         <tbody>
-          ${categories && categories.length > 0 ? categories.map(c => `
+          <% if (categories && categories.length > 0) { %>
+            <% categories.forEach(function(c) { %>
             <tr>
-              <td>${c.id}</td>
+              <td><%= c.id %></td>
               <td>
-                <i class="bi bi-${c.icon || 'folder'} me-2 text-primary"></i>
-                <span class="fw-medium">${c.name}</span>
+                <i class="bi bi-<%= c.icon || 'folder' %> me-2 text-primary"></i>
+                <span class="fw-medium"><%= c.name %></span>
               </td>
-              <td class="text-muted">${c.description || '-'}</td>
-              <td><span class="badge bg-secondary">${c.product_count || 0}</span></td>
-              <td>${c.sort_order || 0}</td>
+              <td class="text-muted"><%= c.description || '-' %></td>
+              <td><span class="badge bg-secondary"><%= c.product_count || 0 %></span></td>
+              <td><%= c.sort_order || 0 %></td>
               <td>
                 <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" ${c.status ? 'checked' : ''} 
-                         onchange="toggleStatus(${c.id}, this.checked)">
+                  <input class="form-check-input" type="checkbox" <%= c.status ? 'checked' : '' %> 
+                         onchange="toggleStatus(<%= c.id %>, this.checked)">
                 </div>
               </td>
               <td>
                 <div class="btn-group btn-group-sm">
                   <button type="button" class="btn btn-outline-primary" title="编辑" 
-                          onclick='openEditModal(${JSON.stringify(c)})'>
+                          onclick='openEditModal(<%- JSON.stringify(c) %>)'>
                     <i class="bi bi-pencil"></i>
                   </button>
                   <button type="button" class="btn btn-outline-danger" title="删除" 
-                          onclick="deleteCategory(${c.id})" ${c.product_count > 0 ? 'disabled' : ''}>
+                          onclick="deleteCategory(<%= c.id %>)" <%= c.product_count > 0 ? 'disabled' : '' %>>
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
               </td>
             </tr>
-          `).join('') : `
+            <% }); %>
+          <% } else { %>
             <tr>
               <td colspan="7" class="text-center py-4 text-muted">暂无分类数据</td>
             </tr>
-          `}
+          <% } %>
         </tbody>
       </table>
     </div>
@@ -217,4 +219,4 @@
   }
 </script>
 
-` }) %>
+<%- include('partials/footer') %>

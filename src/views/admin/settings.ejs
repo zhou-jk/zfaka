@@ -1,8 +1,8 @@
-<%- include('../layouts/admin', { 
-  currentPage: 'settings',
-  pageTitle: '系统设置',
-  user: currentUser,
-  body: `
+<% 
+  var currentPage = 'settings';
+  var pageTitle = '系统设置';
+%>
+<%- include('partials/header') %>
 
 <div class="mb-4">
   <h4 class="mb-0">系统设置</h4>
@@ -20,19 +20,19 @@
         <div class="card-body">
           <div class="mb-3">
             <label class="form-label">网站名称</label>
-            <input type="text" class="form-control" name="site_name" value="${settings?.site_name || '自动售货系统'}">
+            <input type="text" class="form-control" name="site_name" value="<%= settings?.site_name || '自动售货系统' %>">
           </div>
           <div class="mb-3">
             <label class="form-label">网站描述</label>
-            <textarea class="form-control" name="site_description" rows="2">${settings?.site_description || ''}</textarea>
+            <textarea class="form-control" name="site_description" rows="2"><%= settings?.site_description || '' %></textarea>
           </div>
           <div class="mb-3">
             <label class="form-label">网站关键词</label>
-            <input type="text" class="form-control" name="site_keywords" value="${settings?.site_keywords || ''}" placeholder="多个关键词用逗号分隔">
+            <input type="text" class="form-control" name="site_keywords" value="<%= settings?.site_keywords || '' %>" placeholder="多个关键词用逗号分隔">
           </div>
           <div class="mb-3">
             <label class="form-label">备案号</label>
-            <input type="text" class="form-control" name="icp_number" value="${settings?.icp_number || ''}" placeholder="例如：京ICP备XXXXXXXX号">
+            <input type="text" class="form-control" name="icp_number" value="<%= settings?.icp_number || '' %>" placeholder="例如：京ICP备XXXXXXXX号">
           </div>
         </div>
       </div>
@@ -46,16 +46,16 @@
           <div class="row">
             <div class="col-md-6 mb-3">
               <label class="form-label">订单超时时间 (分钟)</label>
-              <input type="number" class="form-control" name="order_timeout" value="${settings?.order_timeout || 15}" min="5" max="60">
+              <input type="number" class="form-control" name="order_timeout" value="<%= settings?.order_timeout || 15 %>" min="5" max="60">
               <small class="text-muted">未支付订单自动取消时间</small>
             </div>
             <div class="col-md-6 mb-3">
               <label class="form-label">订单号前缀</label>
-              <input type="text" class="form-control" name="order_prefix" value="${settings?.order_prefix || ''}" placeholder="例如：ORD">
+              <input type="text" class="form-control" name="order_prefix" value="<%= settings?.order_prefix || '' %>" placeholder="例如：ORD">
             </div>
           </div>
           <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" id="email_notify" name="email_notify" ${settings?.email_notify ? 'checked' : ''}>
+            <input class="form-check-input" type="checkbox" id="email_notify" name="email_notify" <%= settings?.email_notify ? 'checked' : '' %>>
             <label class="form-check-label" for="email_notify">订单支付成功后发送邮件通知</label>
           </div>
         </div>
@@ -71,26 +71,26 @@
           <div class="row">
             <div class="col-md-6 mb-3">
               <label class="form-label">AppID</label>
-              <input type="text" class="form-control" name="alipay_app_id" value="${settings?.alipay_app_id || ''}">
+              <input type="text" class="form-control" name="alipay_app_id" value="<%= settings?.alipay_app_id || '' %>">
             </div>
             <div class="col-md-6 mb-3">
               <label class="form-label">网关地址</label>
               <select class="form-select" name="alipay_gateway">
-                <option value="https://openapi.alipaydev.com/gateway.do" ${settings?.alipay_gateway?.includes('dev') ? 'selected' : ''}>沙箱环境</option>
-                <option value="https://openapi.alipay.com/gateway.do" ${!settings?.alipay_gateway?.includes('dev') && settings?.alipay_gateway ? 'selected' : ''}>正式环境</option>
+                <option value="https://openapi.alipaydev.com/gateway.do" <%= settings?.alipay_gateway?.includes('dev') ? 'selected' : '' %>>沙箱环境</option>
+                <option value="https://openapi.alipay.com/gateway.do" <%= !settings?.alipay_gateway?.includes('dev') && settings?.alipay_gateway ? 'selected' : '' %>>正式环境</option>
               </select>
             </div>
           </div>
           <div class="mb-3">
             <label class="form-label">应用私钥</label>
-            <textarea class="form-control font-monospace" name="alipay_private_key" rows="3" placeholder="请填写应用私钥">${settings?.alipay_private_key || ''}</textarea>
+            <textarea class="form-control font-monospace" name="alipay_private_key" rows="3" placeholder="请填写应用私钥"><%= settings?.alipay_private_key || '' %></textarea>
           </div>
           <div class="mb-3">
             <label class="form-label">支付宝公钥</label>
-            <textarea class="form-control font-monospace" name="alipay_public_key" rows="3" placeholder="请填写支付宝公钥">${settings?.alipay_public_key || ''}</textarea>
+            <textarea class="form-control font-monospace" name="alipay_public_key" rows="3" placeholder="请填写支付宝公钥"><%= settings?.alipay_public_key || '' %></textarea>
           </div>
           <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="alipay_enabled" name="alipay_enabled" ${settings?.alipay_enabled !== false ? 'checked' : ''}>
+            <input class="form-check-input" type="checkbox" id="alipay_enabled" name="alipay_enabled" <%= settings?.alipay_enabled !== false ? 'checked' : '' %>>
             <label class="form-check-label" for="alipay_enabled">启用支付宝支付</label>
           </div>
         </div>
@@ -105,33 +105,33 @@
           <div class="row">
             <div class="col-md-6 mb-3">
               <label class="form-label">SMTP服务器</label>
-              <input type="text" class="form-control" name="smtp_host" value="${settings?.smtp_host || ''}" placeholder="例如：smtp.qq.com">
+              <input type="text" class="form-control" name="smtp_host" value="<%= settings?.smtp_host || '' %>" placeholder="例如：smtp.qq.com">
             </div>
             <div class="col-md-3 mb-3">
               <label class="form-label">端口</label>
-              <input type="number" class="form-control" name="smtp_port" value="${settings?.smtp_port || 465}">
+              <input type="number" class="form-control" name="smtp_port" value="<%= settings?.smtp_port || 465 %>">
             </div>
             <div class="col-md-3 mb-3">
               <label class="form-label">加密方式</label>
               <select class="form-select" name="smtp_secure">
-                <option value="true" ${settings?.smtp_secure !== false ? 'selected' : ''}>SSL</option>
-                <option value="false" ${settings?.smtp_secure === false ? 'selected' : ''}>无</option>
+                <option value="true" <%= settings?.smtp_secure !== false ? 'selected' : '' %>>SSL</option>
+                <option value="false" <%= settings?.smtp_secure === false ? 'selected' : '' %>>无</option>
               </select>
             </div>
           </div>
           <div class="row">
             <div class="col-md-6 mb-3">
               <label class="form-label">发件邮箱</label>
-              <input type="email" class="form-control" name="smtp_user" value="${settings?.smtp_user || ''}" placeholder="your@email.com">
+              <input type="email" class="form-control" name="smtp_user" value="<%= settings?.smtp_user || '' %>" placeholder="your@email.com">
             </div>
             <div class="col-md-6 mb-3">
               <label class="form-label">邮箱密码/授权码</label>
-              <input type="password" class="form-control" name="smtp_pass" value="${settings?.smtp_pass || ''}" placeholder="授权码">
+              <input type="password" class="form-control" name="smtp_pass" value="<%= settings?.smtp_pass || '' %>" placeholder="授权码">
             </div>
           </div>
           <div class="mb-3">
             <label class="form-label">发件人名称</label>
-            <input type="text" class="form-control" name="smtp_from_name" value="${settings?.smtp_from_name || '自动售货系统'}">
+            <input type="text" class="form-control" name="smtp_from_name" value="<%= settings?.smtp_from_name || '自动售货系统' %>">
           </div>
           <button type="button" class="btn btn-outline-primary" onclick="testEmail()">
             <i class="bi bi-send me-2"></i>发送测试邮件
@@ -186,23 +186,23 @@
           </tr>
           <tr>
             <td class="text-muted">Node.js版本</td>
-            <td class="text-end">${process.version}</td>
+            <td class="text-end"><%= process.version %></td>
           </tr>
           <tr>
             <td class="text-muted">运行环境</td>
-            <td class="text-end">${process.env.NODE_ENV || 'development'}</td>
+            <td class="text-end"><%= process.env.NODE_ENV || 'development' %></td>
           </tr>
           <tr>
             <td class="text-muted">操作系统</td>
-            <td class="text-end">${process.platform}</td>
+            <td class="text-end"><%= process.platform %></td>
           </tr>
           <tr>
             <td class="text-muted">服务器时间</td>
-            <td class="text-end">${new Date().toLocaleString('zh-CN')}</td>
+            <td class="text-end"><%= new Date().toLocaleString('zh-CN') %></td>
           </tr>
           <tr>
             <td class="text-muted">内存使用</td>
-            <td class="text-end">${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB</td>
+            <td class="text-end"><%= Math.round(process.memoryUsage().heapUsed / 1024 / 1024) %> MB</td>
           </tr>
         </table>
       </div>
@@ -283,4 +283,4 @@
   }
 </script>
 
-` }) %>
+<%- include('partials/footer') %>
