@@ -121,7 +121,7 @@
         <div class="card-body">
           <div class="mb-3">
             <div id="imagePreview" class="border rounded mb-3 d-flex align-items-center justify-content-center bg-light" 
-                 style="height: 200px; cursor: pointer;" onclick="document.getElementById('imageInput').click()">
+                 style="height: 200px; cursor: pointer;">
               <% if (product?.image) { %>
                 <img src="<%= product.image %>" class="img-fluid" style="max-height: 200px;">
               <% } else { %>
@@ -131,8 +131,13 @@
                 </div>
               <% } %>
             </div>
-            <input type="file" id="imageInput" name="image" accept="image/*" class="d-none" onchange="previewImage(this)">
+            <input type="file" id="imageInput" name="image" accept="image/*" class="d-none">
             <input type="hidden" name="image_url" value="<%= product?.image || '' %>">
+            <div class="d-grid">
+              <button type="button" id="uploadBtn" class="btn btn-outline-secondary">
+                <i class="bi bi-upload me-2"></i>选择图片
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -181,18 +186,32 @@
 <%- include('partials/footer') %>
 
 <script>
-  function previewImage(input) {
-    if (input.files && input.files[0]) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('imagePreview').innerHTML = 
-          '<img src="' + e.target.result + '" class="img-fluid" style="max-height: 200px;">';
-      };
-      reader.readAsDataURL(input.files[0]);
-    }
-  }
-
   document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    // 点击预览区域或按钮触发文件选择
+    imagePreview.addEventListener('click', function() {
+      imageInput.click();
+    });
+    
+    uploadBtn.addEventListener('click', function() {
+      imageInput.click();
+    });
+    
+    // 图片预览
+    imageInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imagePreview.innerHTML = '<img src="' + e.target.result + '" class="img-fluid" style="max-height: 200px;">';
+        };
+        reader.readAsDataURL(this.files[0]);
+      }
+    });
+    
+    // 表单提交
     document.getElementById('productForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
@@ -206,9 +225,9 @@
         const formData = new FormData(this);
         
         // 处理checkbox
-        formData.set('status', formData.has('status') && this.querySelector('#status').checked ? 1 : 0);
-        formData.set('is_hot', formData.has('is_hot') && this.querySelector('#is_hot').checked ? 1 : 0);
-        formData.set('is_recommend', formData.has('is_recommend') && this.querySelector('#is_recommend').checked ? 1 : 0);
+        formData.set('status', this.querySelector('#status').checked ? 1 : 0);
+        formData.set('is_hot', this.querySelector('#is_hot').checked ? 1 : 0);
+        formData.set('is_recommend', this.querySelector('#is_recommend').checked ? 1 : 0);
 
         const isEdit = <%= product ? 'true' : 'false' %>;
         const url = isEdit ? '/api/admin/products/<%= product?.id || '' %>' : '/api/admin/products';
@@ -223,7 +242,7 @@
         const result = await response.json();
 
         if (result.code !== 0) {
-          throw new Error(result.message);
+          throw new Error(result.message || '保存失败');
         }
 
         showAlert('<%= product ? '商品已更新' : '商品已添加' %>');
