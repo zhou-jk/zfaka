@@ -34,9 +34,9 @@
       <div class="col-md-2">
         <select class="form-select" name="status">
           <option value="">全部状态</option>
-          <option value="available" <%= query?.status === 'available' ? 'selected' : '' %>>可用</option>
-          <option value="sold" <%= query?.status === 'sold' ? 'selected' : '' %>>已售</option>
-          <option value="void" <%= query?.status === 'void' ? 'selected' : '' %>>已作废</option>
+          <option value="0" <%= query?.status === '0' || query?.status === 'available' ? 'selected' : '' %>>可用</option>
+          <option value="1" <%= query?.status === '1' || query?.status === 'sold' ? 'selected' : '' %>>已售</option>
+          <option value="2" <%= query?.status === '2' || query?.status === 'void' ? 'selected' : '' %>>已作废</option>
         </select>
       </div>
       <div class="col-auto">

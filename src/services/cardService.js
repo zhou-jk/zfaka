@@ -38,9 +38,12 @@ class CardService {
       sqlParams.push(batch_id);
     }
     
-    if (status !== undefined) {
+    if (status !== undefined && status !== '') {
+      // 转换字符串状态为数字
+      const statusMap = { 'available': 0, 'sold': 1, 'void': 2 };
+      const statusValue = statusMap[status] !== undefined ? statusMap[status] : parseInt(status);
       sql += ' AND c.status = ?';
-      sqlParams.push(status);
+      sqlParams.push(statusValue);
     }
     
     if (keyword) {
