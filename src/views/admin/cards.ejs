@@ -90,7 +90,7 @@
               <tr>
                 <td>
                   <input type="checkbox" class="form-check-input card-checkbox" value="<%= card.id %>" 
-                         onchange="updateSelection()" <%= card.status !== 'available' ? 'disabled' : '' %>>
+                         onchange="updateSelection()" <%= card.status !== 0 ? 'disabled' : '' %>>
                 </td>
                 <td><%= card.id %></td>
                 <td>
@@ -100,8 +100,9 @@
                 <td><%= card.product_name || '-' %></td>
                 <td><small class="text-muted"><%= card.batch_no || '-' %></small></td>
                 <td>
-                  <span class="badge bg-<%= card.status === 'available' ? 'success' : card.status === 'sold' ? 'info' : 'secondary' %>">
-                    <%= card.status === 'available' ? '可用' : card.status === 'sold' ? '已售' : '已作废' %>
+                  <%# status: 0=可用, 1=已售, 2=作废 %>
+                  <span class="badge bg-<%= card.status === 0 ? 'success' : card.status === 1 ? 'info' : 'secondary' %>">
+                    <%= card.status === 0 ? '可用' : card.status === 1 ? '已售' : '已作废' %>
                   </span>
                 </td>
                 <td>
