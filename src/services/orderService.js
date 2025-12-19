@@ -197,6 +197,18 @@ class OrderService {
    */
   async getOrderList(params = {}) {
     const { page = 1, limit = 20, order_no, email, status, product_id, start_date, end_date } = params;
+
+    // 参数规范化（防止数组、空字符串导致占位符/参数不匹配）
+    const orderNo = Array.isArray(order_no) ? order_no[0] : order_no;
+    const emailLike = Array.isArray(email) ? email[0] : email;
+    const statusRaw = Array.isArray(status) ? status[0] : status;
+    const productRaw = Array.isArray(product_id) ? product_id[0] : product_id;
+    const statusFilter = (statusRaw === undefined || statusRaw === null || statusRaw === '' || Number.isNaN(Number(statusRaw)))
+      ? null : parseInt(statusRaw, 10);
+    const productFilter = (productRaw === undefined || productRaw === null || productRaw === '' || Number.isNaN(Number(productRaw)))
+      ? null : parseInt(productRaw, 10);
+    const startDate = (start_date && typeof start_date === 'string' && start_date.trim()) ? start_date.trim() : null;
+    const endDate = (end_date && typeof end_date === 'string' && end_date.trim()) ? end_date.trim() : null;
     
     let sql = `
       SELECT o.*, p.name as product_name_current
@@ -206,36 +218,34 @@ class OrderService {
     `;
     const sqlParams = [];
     
-    if (order_no) {
+    if (orderNo) {
       sql += ' AND o.order_no = ?';
-      sqlParams.push(order_no);
+      sqlParams.push(orderNo);
     }
     
-    if (email) {
+    if (emailLike) {
       sql += ' AND o.buyer_email LIKE ?';
-      sqlParams.push(`%${email}%`);
+      sqlParams.push(`%${emailLike}%`);
     }
     
-    const hasStatus = status !== undefined && status !== null && status !== '';
-    if (hasStatus) {
+    if (statusFilter !== null) {
       sql += ' AND o.order_status = ?';
-      sqlParams.push(status);
+      sqlParams.push(statusFilter);
     }
     
-    const hasProduct = product_id !== undefined && product_id !== null && product_id !== '';
-    if (hasProduct) {
+    if (productFilter !== null) {
       sql += ' AND o.product_id = ?';
-      sqlParams.push(product_id);
+      sqlParams.push(productFilter);
     }
     
-    if (start_date) {
+    if (startDate) {
       sql += ' AND o.created_at >= ?';
-      sqlParams.push(start_date);
+      sqlParams.push(startDate);
     }
     
-    if (end_date) {
+    if (endDate) {
       sql += ' AND o.created_at <= ?';
-      sqlParams.push(end_date + ' 23:59:59');
+      sqlParams.push(endDate + ' 23:59:59');
     }
     
     sql += ' ORDER BY o.id DESC';
@@ -248,6 +258,18 @@ class OrderService {
    */
   async getOrderStats(params = {}) {
     const { order_no, email, status, product_id, start_date, end_date } = params;
+
+    // 参数规范化
+    const orderNo = Array.isArray(order_no) ? order_no[0] : order_no;
+    const emailLike = Array.isArray(email) ? email[0] : email;
+    const statusRaw = Array.isArray(status) ? status[0] : status;
+    const productRaw = Array.isArray(product_id) ? product_id[0] : product_id;
+    const statusFilter = (statusRaw === undefined || statusRaw === null || statusRaw === '' || Number.isNaN(Number(statusRaw)))
+      ? null : parseInt(statusRaw, 10);
+    const productFilter = (productRaw === undefined || productRaw === null || productRaw === '' || Number.isNaN(Number(productRaw)))
+      ? null : parseInt(productRaw, 10);
+    const startDate = (start_date && typeof start_date === 'string' && start_date.trim()) ? start_date.trim() : null;
+    const endDate = (end_date && typeof end_date === 'string' && end_date.trim()) ? end_date.trim() : null;
     let sql = `
       SELECT
         COUNT(*) AS total,
@@ -261,36 +283,34 @@ class OrderService {
     `;
     const sqlParams = [];
 
-    if (order_no) {
+    if (orderNo) {
       sql += ' AND o.order_no = ?';
-      sqlParams.push(order_no);
+      sqlParams.push(orderNo);
     }
 
-    if (email) {
+    if (emailLike) {
       sql += ' AND o.buyer_email LIKE ?';
-      sqlParams.push(`%${email}%`);
+      sqlParams.push(`%${emailLike}%`);
     }
 
-    const hasStatus = status !== undefined && status !== null && status !== '';
-    if (hasStatus) {
+    if (statusFilter !== null) {
       sql += ' AND o.order_status = ?';
-      sqlParams.push(status);
+      sqlParams.push(statusFilter);
     }
 
-    const hasProduct = product_id !== undefined && product_id !== null && product_id !== '';
-    if (hasProduct) {
+    if (productFilter !== null) {
       sql += ' AND o.product_id = ?';
-      sqlParams.push(product_id);
+      sqlParams.push(productFilter);
     }
 
-    if (start_date) {
+    if (startDate) {
       sql += ' AND o.created_at >= ?';
-      sqlParams.push(start_date);
+      sqlParams.push(startDate);
     }
 
-    if (end_date) {
+    if (endDate) {
       sql += ' AND o.created_at <= ?';
-      sqlParams.push(end_date + ' 23:59:59');
+      sqlParams.push(endDate + ' 23:59:59');
     }
 
     const row = await db.queryOne(sql, sqlParams);
