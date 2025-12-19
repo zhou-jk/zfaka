@@ -89,20 +89,37 @@ router.get('/products', asyncHandler(async (req, res) => {
 }));
 
 /**
- * 添加/编辑商品页面
+ * 添加商品页面
  */
-router.get('/products/edit/:id?', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  let product = null;
+router.get('/products/add', asyncHandler(async (req, res) => {
+  const categories = await productService.getCategoryList();
   
-  if (id) {
-    product = await productService.getProductById(id, true);
+  res.render('admin/product-edit', {
+    title: '添加商品',
+    product: null,
+    categories,
+  });
+}));
+
+/**
+ * 编辑商品页面
+ */
+router.get('/products/:id/edit', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const product = await productService.getProductById(id, true);
+  
+  if (!product) {
+    return res.status(404).render('error', {
+      title: '商品不存在',
+      message: '商品不存在',
+      code: 404,
+    });
   }
   
   const categories = await productService.getCategoryList();
   
   res.render('admin/product-edit', {
-    title: id ? '编辑商品' : '添加商品',
+    title: '编辑商品',
     product,
     categories,
   });
