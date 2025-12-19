@@ -127,6 +127,10 @@
                       <button type="button" class="btn btn-outline-warning btn-void" title="作废" data-id="<%= card.id %>">
                         <i class="bi bi-x-circle"></i>
                       </button>
+                    <% } else if (card.status === 2) { %>
+                      <button type="button" class="btn btn-outline-success btn-restore" title="恢复" data-id="<%= card.id %>">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                      </button>
                     <% } %>
                     <button type="button" class="btn btn-outline-danger btn-delete" title="删除" data-id="<%= card.id %>">
                       <i class="bi bi-trash"></i>
@@ -258,6 +262,24 @@
             showAlert(error.message || '操作失败', 'danger');
           }
         });
+      });
+    });
+    
+    // 恢复卡密
+    document.querySelectorAll('.btn-restore').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        const id = this.dataset.id;
+        try {
+          const response = await fetch('/api/admin/cards/' + id + '/restore', {
+            method: 'POST',
+          });
+          const result = await response.json();
+          if (result.code !== 0) throw new Error(result.message);
+          showAlert('卡密已恢复');
+          location.reload();
+        } catch (error) {
+          showAlert(error.message || '操作失败', 'danger');
+        }
       });
     });
     

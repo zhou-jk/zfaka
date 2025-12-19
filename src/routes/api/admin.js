@@ -313,6 +313,32 @@ router.post('/cards/batch-void', asyncHandler(async (req, res) => {
 }));
 
 /**
+ * 恢复作废的卡密
+ * POST /api/admin/cards/:id/restore
+ */
+router.post('/cards/:id/restore', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  
+  await cardService.restoreCard(id, req.session.user.id);
+  success(res, null, '卡密已恢复');
+}));
+
+/**
+ * 批量恢复作废的卡密
+ * POST /api/admin/cards/batch-restore
+ */
+router.post('/cards/batch-restore', asyncHandler(async (req, res) => {
+  const { ids } = req.body;
+  
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return fail(res, '请选择要恢复的卡密');
+  }
+  
+  const result = await cardService.restoreCards(ids, req.session.user.id);
+  success(res, result, `成功恢复 ${result.count} 张卡密`);
+}));
+
+/**
  * 删除卡密
  * DELETE /api/admin/cards/:id
  */

@@ -314,6 +314,60 @@ class CardService {
   }
   
   /**
+   * 恢复作废的卡密
+   */
+  async restoreCard(id, operatorId) {
+    const card = await db.queryOne('SELECT * FROM card_code WHERE id = ?', [id]);
+    
+    if (!card) {
+      throw new BusinessError(ErrorCodes.CARD_NOT_FOUND);
+    }
+    
+    if (card.status !== 2) {
+      throw new BusinessError({
+        code: 4011,
+        message: '只能恢复已作废的卡密',
+      });
+    }
+    
+    await db.update('card_code', {
+      status: 0,
+      void_reason: null,
+      void_by: null,
+      void_at: null,
+    }, { id });
+    
+    // 更新商品库存
+    await productService.updateProductStock(card.product_id);
+    
+    // 记录日志
+    await logger.logOperation(operatorId, 'CARD_RESTORE', 'card_code', id, {
+      product_id: card.product_id,
+      card_code: card.card_code.substring(0, 10) + '...',
+    }, null);
+    
+    return true;
+  }
+  
+  /**
+   * 批量恢复作废的卡密
+   */
+  async restoreCards(ids, operatorId) {
+    let successCount = 0;
+    
+    for (const id of ids) {
+      try {
+        await this.restoreCard(id, operatorId);
+        successCount++;
+      } catch (error) {
+        logger.warn(`卡密恢复失败: ${id}`, error.message);
+      }
+    }
+    
+    return { count: successCount, total: ids.length };
+  }
+  
+  /**
    * 删除卡密
    */
   async deleteCard(id, operatorId) {
