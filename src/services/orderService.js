@@ -586,9 +586,17 @@ class OrderService {
   }
   
   /**
-   * 获取订单统计
+   * 获取订单统计（按日期范围，用于统计服务）
    */
-  async getOrderStats(startDate, endDate) {
+  async getOrderStatsByDateRange(startDate, endDate) {
+    // 参数校验
+    if (!startDate || startDate === 'undefined' || typeof startDate !== 'string') {
+      startDate = new Date().toISOString().split('T')[0];
+    }
+    if (!endDate || endDate === 'undefined' || typeof endDate !== 'string') {
+      endDate = new Date().toISOString().split('T')[0];
+    }
+    
     const sql = `
       SELECT 
         COUNT(*) as total_orders,
