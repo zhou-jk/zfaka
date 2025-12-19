@@ -173,8 +173,10 @@ class CardService {
       batch_id: batchId,
       batch_no: batchId,
       total: cards.length,
+      imported: successCount,
       success: successCount,
       fail: failCount,
+      duplicates: duplicateCount,
       duplicate: duplicateCount,
       failed_cards: failedCards.slice(0, 100), // 最多返回100条失败记录
     };

@@ -223,18 +223,28 @@ router.delete('/categories/:id', asyncHandler(async (req, res) => {
  * POST /api/admin/cards/import
  */
 router.post('/cards/import', cardUpload.single('file'), asyncHandler(async (req, res) => {
-  const { productId } = req.body;
+  const { productId, cards_text, skip_duplicate } = req.body;
   
-  if (!req.file) {
-    return fail(res, '请上传卡密文件');
+  let lines = [];
+  
+  // 支持两种导入方式：文件上传或文本输入
+  if (req.file) {
+    // 文件上传方式
+    const content = req.file.buffer.toString('utf8');
+    lines = content.split(/\r?\n/).filter(line => line.trim());
+  } else if (cards_text) {
+    // 文本输入方式
+    lines = cards_text.split(/\r?\n/).filter(line => line.trim());
+  } else {
+    return fail(res, { code: 1001, message: '请上传卡密文件或输入卡密内容' });
   }
   
-  // 解析文件内容
-  const content = req.file.buffer.toString('utf8');
-  const lines = content.split(/\r?\n/).filter(line => line.trim());
-  
   if (lines.length === 0) {
-    return fail(res, '文件内容为空');
+    return fail(res, { code: 1001, message: '卡密内容为空' });
+  }
+  
+  if (!productId) {
+    return fail(res, { code: 1001, message: '请选择商品' });
   }
   
   // 导入卡密
@@ -242,7 +252,7 @@ router.post('/cards/import', cardUpload.single('file'), asyncHandler(async (req,
     productId,
     lines,
     req.session.user.id,
-    req.file.originalname
+    req.file?.originalname || '手动输入'
   );
   
   success(res, result, `成功导入 ${result.imported} 张卡密`);
