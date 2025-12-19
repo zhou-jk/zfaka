@@ -313,6 +313,32 @@ router.post('/cards/batch-void', asyncHandler(async (req, res) => {
 }));
 
 /**
+ * 删除卡密
+ * DELETE /api/admin/cards/:id
+ */
+router.delete('/cards/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  
+  await cardService.deleteCard(id, req.session.user.id);
+  success(res, null, '卡密已删除');
+}));
+
+/**
+ * 批量删除卡密
+ * POST /api/admin/cards/batch-delete
+ */
+router.post('/cards/batch-delete', asyncHandler(async (req, res) => {
+  const { ids } = req.body;
+  
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return fail(res, '请选择要删除的卡密');
+  }
+  
+  const result = await cardService.deleteCards(ids, req.session.user.id);
+  success(res, result, `成功删除 ${result.count} 张卡密`);
+}));
+
+/**
  * 导出卡密
  * GET /api/admin/cards/export
  */

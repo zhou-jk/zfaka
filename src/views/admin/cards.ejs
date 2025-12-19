@@ -54,8 +54,11 @@
   <div class="card-body py-2">
     <div class="d-flex align-items-center">
       <span class="text-muted me-3">已选择 <span id="selectedCount">0</span> 项</span>
-      <button type="button" class="btn btn-sm btn-outline-danger me-2" onclick="batchVoid()">
+      <button type="button" class="btn btn-sm btn-outline-warning me-2" onclick="batchVoid()">
         <i class="bi bi-x-circle me-1"></i>批量作废
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-danger me-2" onclick="batchDelete()">
+        <i class="bi bi-trash me-1"></i>批量删除
       </button>
       <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
         取消选择
@@ -117,14 +120,17 @@
                 <td><%= new Date(card.created_at).toLocaleString('zh-CN') %></td>
                 <td>
                   <div class="btn-group btn-group-sm">
-                    <button type="button" class="btn btn-outline-primary" title="复制" onclick="copyCard('<%= card.content %>')">
+                    <button type="button" class="btn btn-outline-primary" title="复制卡密" onclick="copyCard('<%= (card.card_code || '').replace(/'/g, "\\'\" ) %>')">
                       <i class="bi bi-clipboard"></i>
                     </button>
-                    <% if (card.status === 'available') { %>
-                      <button type="button" class="btn btn-outline-danger" title="作废" onclick="voidCard(<%= card.id %>)">
+                    <% if (card.status === 0) { %>
+                      <button type="button" class="btn btn-outline-warning" title="作废" onclick="voidCard(<%= card.id %>)">
                         <i class="bi bi-x-circle"></i>
                       </button>
                     <% } %>
+                    <button type="button" class="btn btn-outline-danger" title="删除" onclick="deleteCard(<%= card.id %>)">
+                      <i class="bi bi-trash"></i>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -224,6 +230,41 @@
         const result = await response.json();
         if (result.code !== 0) throw new Error(result.message);
         showAlert('批量作废成功');
+        location.reload();
+      } catch (error) {
+        showAlert(error.message || '操作失败', 'danger');
+      }
+    });
+  }
+
+  async function deleteCard(id) {
+    confirmDelete('确定要删除该卡密吗？删除后无法恢复。', async () => {
+      try {
+        const response = await fetch('/api/admin/cards/' + id, {
+          method: 'DELETE',
+        });
+        const result = await response.json();
+        if (result.code !== 0) throw new Error(result.message);
+        showAlert('卡密已删除');
+        location.reload();
+      } catch (error) {
+        showAlert(error.message || '操作失败', 'danger');
+      }
+    });
+  }
+
+  async function batchDelete() {
+    if (selectedIds.length === 0) return;
+    confirmDelete('确定要删除选中的 ' + selectedIds.length + ' 张卡密吗？', async () => {
+      try {
+        const response = await fetch('/api/admin/cards/batch-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: selectedIds }),
+        });
+        const result = await response.json();
+        if (result.code !== 0) throw new Error(result.message);
+        showAlert('批量删除成功');
         location.reload();
       } catch (error) {
         showAlert(error.message || '操作失败', 'danger');

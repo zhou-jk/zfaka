@@ -307,7 +307,56 @@ class CardService {
       }
     }
     
-    return { success: successCount, total: ids.length };
+    return { count: successCount, total: ids.length };
+  }
+  
+  /**
+   * 删除卡密
+   */
+  async deleteCard(id, operatorId) {
+    const card = await db.queryOne('SELECT * FROM card_code WHERE id = ?', [id]);
+    
+    if (!card) {
+      throw new BusinessError(ErrorCodes.CARD_NOT_FOUND);
+    }
+    
+    if (card.status === 1) {
+      throw new BusinessError({
+        code: 4010,
+        message: '已售出的卡密不能删除',
+      });
+    }
+    
+    await db.query('DELETE FROM card_code WHERE id = ?', [id]);
+    
+    // 更新商品库存
+    await productService.updateProductStock(card.product_id);
+    
+    // 记录日志
+    await logger.logOperation(operatorId, 'CARD_DELETE', 'card_code', id, {
+      product_id: card.product_id,
+      card_code: card.card_code.substring(0, 10) + '...',
+    }, null);
+    
+    return true;
+  }
+  
+  /**
+   * 批量删除卡密
+   */
+  async deleteCards(ids, operatorId) {
+    let successCount = 0;
+    
+    for (const id of ids) {
+      try {
+        await this.deleteCard(id, operatorId);
+        successCount++;
+      } catch (error) {
+        logger.warn(`卡密删除失败: ${id}`, error.message);
+      }
+    }
+    
+    return { count: successCount, total: ids.length };
   }
   
   /**
