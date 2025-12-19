@@ -141,7 +141,7 @@
           <% recentBatches.forEach(function(batch) { %>
             <div class="list-group-item">
               <div class="d-flex justify-content-between">
-                <small class="text-muted"><%= batch.batch_no %></small>
+                <small class="text-muted"><%= batch.batch_no || batch.id %></small>
                 <span class="badge bg-success"><%= batch.count %> 张</span>
               </div>
               <div class="small"><%= batch.product_name %></div>
@@ -275,10 +275,10 @@
           </div>
         </div>
         <div class="mt-3">
-          <small class="text-muted">批次号: ${data.batch_no}</small>
+          <small class="text-muted">批次号: ${data.batch_no || data.batch_id}</small>
         </div>
         <div class="mt-3">
-          <a href="/admin/cards?batch_no=${data.batch_no}" class="btn btn-primary">
+          <a href="/admin/cards?batch_id=${data.batch_id || data.batch_no}" class="btn btn-primary">
             <i class="bi bi-eye me-2"></i>查看导入的卡密
           </a>
         </div>

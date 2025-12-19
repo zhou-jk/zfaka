@@ -171,6 +171,7 @@ class CardService {
     
     return {
       batch_id: batchId,
+      batch_no: batchId,
       total: cards.length,
       success: successCount,
       fail: failCount,
@@ -377,7 +378,7 @@ class CardService {
    */
   async getRecentBatches(limit = 10) {
     const [rows] = await db.query(
-      `SELECT b.id, b.batch_no, b.product_id, b.file_name,
+      `SELECT b.id AS batch_no, b.id, b.product_id, b.file_name,
               b.total_count, b.success_count, b.fail_count, b.duplicate_count,
               b.status, b.created_at, p.name AS product_name
        FROM card_import_batch b
