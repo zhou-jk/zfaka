@@ -758,6 +758,34 @@ router.post('/upload/image', imageUpload.single('image'), asyncHandler(async (re
 // ========== 用户管理 ==========
 
 /**
+ * 更新个人信息
+ * PUT /api/admin/profile
+ */
+router.put('/profile', asyncHandler(async (req, res) => {
+  const { username, email } = req.body;
+  
+  if (!username || username.trim().length < 2) {
+    return fail(res, '用户名长度至少2位');
+  }
+  
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return fail(res, '邮箱格式不正确');
+  }
+  
+  const userService = require('../../services/userService');
+  await userService.updateUser(req.session.user.id, {
+    username: username.trim(),
+    email: email ? email.trim() : null,
+  });
+  
+  // 更新 session 中的用户信息
+  req.session.user.username = username.trim();
+  req.session.user.email = email ? email.trim() : null;
+  
+  success(res, null, '个人信息已更新');
+}));
+
+/**
  * 修改密码
  * PUT /api/admin/password
  */

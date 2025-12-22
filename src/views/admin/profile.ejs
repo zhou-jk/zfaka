@@ -12,46 +12,49 @@
             <div class="avatar-circle mx-auto mb-3">
               <i class="bi bi-person-circle" style="font-size: 4rem; color: #6c757d;"></i>
             </div>
-            <h5><%= user?.username || '管理员' %></h5>
-            <span class="badge bg-primary">管理员</span>
+            <% if (user?.role === 1) { %>
+              <span class="badge bg-danger">超级管理员</span>
+            <% } else { %>
+              <span class="badge bg-secondary">普通管理员</span>
+            <% } %>
           </div>
           
-          <table class="table table-borderless">
-            <tbody>
-              <tr>
-                <td class="text-muted" style="width: 120px;">用户名</td>
-                <td><%= user?.username || '-' %></td>
-              </tr>
-              <tr>
-                <td class="text-muted">邮箱</td>
-                <td><%= user?.email || '未设置' %></td>
-              </tr>
-              <tr>
-                <td class="text-muted">角色</td>
-                <td>
-                  <% if (user?.role === 1) { %>
-                    <span class="badge bg-danger">超级管理员</span>
-                  <% } else { %>
-                    <span class="badge bg-secondary">普通管理员</span>
-                  <% } %>
-                </td>
-              </tr>
-              <tr>
-                <td class="text-muted">创建时间</td>
-                <td><%= user?.created_at ? new Date(user.created_at).toLocaleString('zh-CN') : '-' %></td>
-              </tr>
-              <tr>
-                <td class="text-muted">最后登录</td>
-                <td><%= user?.last_login_at ? new Date(user.last_login_at).toLocaleString('zh-CN') : '-' %></td>
-              </tr>
-            </tbody>
-          </table>
-          
-          <div class="d-flex justify-content-center gap-2 mt-4">
-            <a href="/admin/password" class="btn btn-outline-primary">
-              <i class="bi bi-key me-1"></i>修改密码
-            </a>
-          </div>
+          <form id="profileForm">
+            <div class="mb-3">
+              <label class="form-label">用户名 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="username" 
+                     value="<%= user?.username || '' %>" required minlength="2" maxlength="50"
+                     placeholder="请输入用户名">
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">邮箱</label>
+              <input type="email" class="form-control" name="email" 
+                     value="<%= user?.email || '' %>"
+                     placeholder="请输入邮箱（可选）">
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">角色</label>
+              <input type="text" class="form-control" disabled
+                     value="<%= user?.role === 1 ? '超级管理员' : '普通管理员' %>">
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">创建时间</label>
+              <input type="text" class="form-control" disabled
+                     value="<%= user?.created_at ? new Date(user.created_at).toLocaleString('zh-CN') : '-' %>">
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+              <a href="/admin/password" class="btn btn-outline-secondary">
+                <i class="bi bi-key me-1"></i>修改密码
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg me-1"></i>保存修改
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -59,3 +62,48 @@
 </div>
 
 <%- include('partials/footer') %>
+
+<script>
+  document.getElementById('profileForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const btn = form.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+    
+    const formData = new FormData(form);
+    const data = {
+      username: formData.get('username'),
+      email: formData.get('email') || null
+    };
+    
+    try {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>保存中...';
+      
+      const response = await fetch('/api/admin/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await response.json();
+      
+      if (result.code !== 0) {
+        throw new Error(result.message);
+      }
+      
+      showAlert('个人信息已更新');
+      
+      // 刷新页面以更新侧边栏显示的用户名
+      setTimeout(function() {
+        location.reload();
+      }, 1000);
+      
+    } catch (error) {
+      showAlert(error.message || '保存失败', 'danger');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  });
+</script>

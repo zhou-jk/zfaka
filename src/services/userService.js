@@ -133,6 +133,20 @@ class UserService {
   async updateUser(id, data) {
     const updateData = {};
     
+    if (data.username !== undefined) {
+      // 检查用户名是否已存在
+      const existing = await db.queryOne(
+        'SELECT id FROM sys_user WHERE username = ? AND id != ?',
+        [data.username, id]
+      );
+      if (existing) {
+        throw new BusinessError({
+          code: 2012,
+          message: '用户名已被占用',
+        });
+      }
+      updateData.username = data.username;
+    }
     if (data.email !== undefined) updateData.email = data.email;
     if (data.phone !== undefined) updateData.phone = data.phone;
     if (data.avatar !== undefined) updateData.avatar = data.avatar;
