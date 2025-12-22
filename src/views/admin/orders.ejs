@@ -9,7 +9,7 @@
     <h4 class="mb-0">订单列表</h4>
     <small class="text-muted">管理所有订单</small>
   </div>
-  <button type="button" class="btn btn-outline-primary" onclick="exportOrders()">
+  <button type="button" class="btn btn-outline-primary" id="exportOrdersBtn">
     <i class="bi bi-download me-2"></i>导出订单
   </button>
 </div>
@@ -135,9 +135,22 @@
                     <a href="/admin/orders/<%= order.id %>" class="btn btn-outline-primary" title="详情">
                       <i class="bi bi-eye"></i>
                     </a>
-                    <% if (order.order_status === 0) { %>
-                      <button type="button" class="btn btn-outline-secondary" title="取消" onclick="cancelOrder(<%= order.id %>)">
+                    <% if (order.order_status === 0 || order.order_status === 1) { %>
+                      <button type="button" class="btn btn-outline-success btn-confirm-payment" title="确认收款" data-id="<%= order.id %>">
+                        <i class="bi bi-check-circle"></i>
+                      </button>
+                      <button type="button" class="btn btn-outline-secondary btn-cancel" title="取消" data-id="<%= order.id %>">
                         <i class="bi bi-x-circle"></i>
+                      </button>
+                    <% } %>
+                    <% if (order.order_status === 2 || order.order_status === 4) { %>
+                      <button type="button" class="btn btn-outline-info btn-deliver" title="手动发货" data-id="<%= order.id %>">
+                        <i class="bi bi-send"></i>
+                      </button>
+                    <% } %>
+                    <% if (order.order_status === 3) { %>
+                      <button type="button" class="btn btn-outline-danger btn-refund" title="退款" data-id="<%= order.id %>">
+                        <i class="bi bi-arrow-counterclockwise"></i>
                       </button>
                     <% } %>
                   </div>
@@ -184,25 +197,90 @@
 <%- include('partials/footer') %>
 
 <script>
-  async function cancelOrder(id) {
-    confirmDelete('确定要取消该订单吗？', async () => {
-      try {
-        const response = await fetch('/api/admin/orders/' + id + '/cancel', {
-          method: 'POST',
-        });
-        const result = await response.json();
-        if (result.code !== 0) throw new Error(result.message);
-        showAlert('订单已取消');
-        location.reload();
-      } catch (error) {
-        showAlert(error.message || '操作失败', 'danger');
-      }
-    });
-  }
-
-  function exportOrders() {
+  // 导出订单按钮
+  document.getElementById('exportOrdersBtn').addEventListener('click', function() {
     const params = new URLSearchParams(window.location.search);
     params.set('export', '1');
     window.location.href = '/api/admin/orders/export?' + params.toString();
-  }
+  });
+
+  // 取消订单按钮
+  document.querySelectorAll('.btn-cancel').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = this.dataset.id;
+      confirmDelete('确定要取消该订单吗？', async function() {
+        try {
+          const response = await fetch('/api/admin/orders/' + id + '/cancel', {
+            method: 'POST',
+          });
+          const result = await response.json();
+          if (result.code !== 0) throw new Error(result.message);
+          showAlert('订单已取消');
+          location.reload();
+        } catch (error) {
+          showAlert(error.message || '操作失败', 'danger');
+        }
+      });
+    });
+  });
+
+  // 确认收款按钮
+  document.querySelectorAll('.btn-confirm-payment').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = this.dataset.id;
+      confirmDelete('确定要确认收款吗？系统将自动尝试发货。', async function() {
+        try {
+          const response = await fetch('/api/admin/orders/' + id + '/confirm-payment', {
+            method: 'POST',
+          });
+          const result = await response.json();
+          if (result.code !== 0) throw new Error(result.message);
+          showAlert('已确认收款');
+          location.reload();
+        } catch (error) {
+          showAlert(error.message || '操作失败', 'danger');
+        }
+      });
+    });
+  });
+
+  // 手动发货按钮
+  document.querySelectorAll('.btn-deliver').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = this.dataset.id;
+      confirmDelete('确定要手动发货吗？系统将为该订单分配卡密。', async function() {
+        try {
+          const response = await fetch('/api/admin/orders/' + id + '/deliver', {
+            method: 'POST',
+          });
+          const result = await response.json();
+          if (result.code !== 0) throw new Error(result.message);
+          showAlert('发货成功');
+          location.reload();
+        } catch (error) {
+          showAlert(error.message || '发货失败', 'danger');
+        }
+      });
+    });
+  });
+
+  // 退款按钮
+  document.querySelectorAll('.btn-refund').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = this.dataset.id;
+      confirmDelete('确定要退款吗？退款后卡密将被作废。', async function() {
+        try {
+          const response = await fetch('/api/admin/orders/' + id + '/refund', {
+            method: 'POST',
+          });
+          const result = await response.json();
+          if (result.code !== 0) throw new Error(result.message);
+          showAlert('退款成功');
+          location.reload();
+        } catch (error) {
+          showAlert(error.message || '退款失败', 'danger');
+        }
+      });
+    });
+  });
 </script>
