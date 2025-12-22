@@ -272,10 +272,19 @@
 
   function updateChannelChart(channels) {
     if (channelChart) channelChart.destroy();
+    
+    if (!channels || channels.length === 0) {
+      document.getElementById('channelLegend').innerHTML = '<div class="text-muted text-center">暂无数据</div>';
+      return;
+    }
 
-    const labels = channels.map(c => c.channel === 'alipay' ? '支付宝' : c.channel);
-    const values = channels.map(c => c.amount);
-    const colors = ['#0d6efd', '#198754', '#ffc107', '#dc3545'];
+    // 兼容两种字段格式: name/value 或 channel/amount
+    const labels = channels.map(function(c) {
+      var ch = c.name || c.channel || 'unknown';
+      return ch === 'alipay' ? '支付宝' : ch === 'manual' ? '手动确认' : ch === 'unknown' ? '未知' : ch;
+    });
+    const values = channels.map(function(c) { return c.value || c.amount || 0; });
+    const colors = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6c757d'];
 
     const ctx = document.getElementById('channelChart').getContext('2d');
     channelChart = new Chart(ctx, {
@@ -295,14 +304,15 @@
     });
 
     // 更新图例
-    let legendHtml = '';
-    channels.forEach((c, i) => {
-      legendHtml += `
-        <div class="d-flex justify-content-between mb-2">
-          <span><span class="badge me-2" style="background-color: ${colors[i]}">　</span>${c.channel === 'alipay' ? '支付宝' : c.channel}</span>
-          <span class="fw-bold">¥${parseFloat(c.amount).toFixed(2)}</span>
-        </div>
-      `;
+    var legendHtml = '';
+    channels.forEach(function(c, i) {
+      var ch = c.name || c.channel || 'unknown';
+      var label = ch === 'alipay' ? '支付宝' : ch === 'manual' ? '手动确认' : ch === 'unknown' ? '未知' : ch;
+      var val = c.value || c.amount || 0;
+      legendHtml += '<div class="d-flex justify-content-between mb-2">' +
+        '<span><span class="badge me-2" style="background-color: ' + colors[i] + '">　</span>' + label + '</span>' +
+        '<span class="fw-bold">' + val + ' 笔</span>' +
+      '</div>';
     });
     document.getElementById('channelLegend').innerHTML = legendHtml || '<div class="text-muted text-center">暂无数据</div>';
   }
@@ -314,34 +324,40 @@
       return;
     }
 
-    tbody.innerHTML = products.map((p, i) => `
-      <tr>
-        <td>
-          <span class="badge bg-${i < 3 ? ['danger', 'warning', 'info'][i] : 'secondary'}">${i + 1}</span>
-        </td>
-        <td>${p.name}</td>
-        <td>${p.sales}</td>
-        <td class="text-danger">¥${parseFloat(p.amount).toFixed(2)}</td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = products.map(function(p, i) {
+      return '<tr>' +
+        '<td><span class="badge bg-' + (i < 3 ? ['danger', 'warning', 'info'][i] : 'secondary') + '">' + (i + 1) + '</span></td>' +
+        '<td>' + (p.name || '-') + '</td>' +
+        '<td>' + (p.soldCount || p.sales || 0) + '</td>' +
+        '<td class="text-danger">¥' + (parseFloat(p.salesAmount || p.amount || 0)).toFixed(2) + '</td>' +
+      '</tr>';
+    }).join('');
   }
 
   function updateStatusChart(statusDist) {
     if (statusChart) statusChart.destroy();
+    
+    if (!statusDist || Object.keys(statusDist).length === 0) {
+      document.getElementById('statusStats').innerHTML = '<div class="col text-muted">暂无数据</div>';
+      return;
+    }
 
-    const statusMap = {
+    var statusMap = {
       pending: { label: '待支付', color: '#ffc107' },
-      paid: { label: '已支付', color: '#17a2b8' },
-      delivered: { label: '已发货', color: '#28a745' },
+      paying: { label: '支付中', color: '#17a2b8' },
+      paid: { label: '已支付', color: '#0dcaf0' },
+      delivered: { label: '已完成', color: '#28a745' },
+      manual: { label: '待处理', color: '#fd7e14' },
       cancelled: { label: '已取消', color: '#6c757d' },
       refunded: { label: '已退款', color: '#dc3545' },
     };
 
-    const labels = Object.keys(statusDist).map(k => statusMap[k]?.label || k);
-    const values = Object.values(statusDist);
-    const colors = Object.keys(statusDist).map(k => statusMap[k]?.color || '#6c757d');
+    var keys = Object.keys(statusDist);
+    var labels = keys.map(function(k) { return (statusMap[k] && statusMap[k].label) || k; });
+    var values = keys.map(function(k) { return statusDist[k]; });
+    var colors = keys.map(function(k) { return (statusMap[k] && statusMap[k].color) || '#6c757d'; });
 
-    const ctx = document.getElementById('statusChart').getContext('2d');
+    var ctx = document.getElementById('statusChart').getContext('2d');
     statusChart = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -360,15 +376,14 @@
     });
 
     // 更新统计数字
-    let statsHtml = '';
-    Object.entries(statusDist).forEach(([status, count]) => {
-      const info = statusMap[status] || { label: status, color: '#6c757d' };
-      statsHtml += `
-        <div class="col">
-          <div class="fs-4 fw-bold" style="color: ${info.color}">${count}</div>
-          <small class="text-muted">${info.label}</small>
-        </div>
-      `;
+    var statsHtml = '';
+    keys.forEach(function(status) {
+      var count = statusDist[status];
+      var info = statusMap[status] || { label: status, color: '#6c757d' };
+      statsHtml += '<div class="col">' +
+        '<div class="fs-4 fw-bold" style="color: ' + info.color + '">' + count + '</div>' +
+        '<small class="text-muted">' + info.label + '</small>' +
+      '</div>';
     });
     document.getElementById('statusStats').innerHTML = statsHtml || '<div class="col text-muted">暂无数据</div>';
   }

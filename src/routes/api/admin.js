@@ -539,6 +539,32 @@ router.get('/statistics/summary', asyncHandler(async (req, res) => {
     GROUP BY pay_channel
   `, [startStr + ' 00:00:00', endStr + ' 23:59:59']);
   
+  // 获取订单状态分布
+  const statusStats = await db.query(`
+    SELECT 
+      order_status,
+      COUNT(*) as count
+    FROM order_main
+    WHERE created_at >= ? AND created_at <= ?
+    GROUP BY order_status
+  `, [startStr + ' 00:00:00', endStr + ' 23:59:59']);
+  
+  // 转换为状态分布对象
+  const statusDist = {};
+  const statusNameMap = {
+    0: 'pending',
+    1: 'paying',
+    2: 'paid',
+    3: 'delivered',
+    4: 'manual',
+    5: 'cancelled',
+    6: 'refunded',
+  };
+  statusStats.forEach(s => {
+    const name = statusNameMap[s.order_status] || 'unknown';
+    statusDist[name] = parseInt(s.count) || 0;
+  });
+  
   success(res, {
     sales: parseFloat(currentStats.sales) || 0,
     orders: parseInt(currentStats.orders) || 0,
@@ -549,6 +575,7 @@ router.get('/statistics/summary', asyncHandler(async (req, res) => {
     cardsChange: calcChange(currentStats.cards, prevStats.cards),
     avgChange: calcChange(avgOrder, prevAvgOrder),
     channels: channels,
+    statusDist: statusDist,
   });
 }));
 
