@@ -3,7 +3,6 @@
  */
 
 const db = require('../utils/database');
-const redis = require('../utils/redis');
 const logger = require('../utils/logger');
 const { formatDate } = require('../utils/helpers');
 
@@ -127,11 +126,11 @@ class StatisticsService {
    */
   async getPendingStats() {
     const pendingOrders = await db.queryOne(
-      'SELECT COUNT(*) as count FROM order_main WHERE order_status = 4'
+      'SELECT COUNT(*) as count FROM order_main WHERE order_status = 4',
     );
     
     const pendingPayments = await db.queryOne(
-      'SELECT COUNT(*) as count FROM order_main WHERE order_status IN (0, 1) AND expire_time > NOW()'
+      'SELECT COUNT(*) as count FROM order_main WHERE order_status IN (0, 1) AND expire_time > NOW()',
     );
     
     return {
@@ -297,7 +296,7 @@ class StatisticsService {
     // 检查是否已存在
     const existing = await db.queryOne(
       'SELECT id FROM statistics_daily WHERE stat_date = ?',
-      [targetDate]
+      [targetDate],
     );
     
     const stats = await this.getDailyStats(targetDate);
@@ -337,7 +336,7 @@ class StatisticsService {
       `SELECT * FROM statistics_daily 
        WHERE stat_date >= ? AND stat_date <= ?
        ORDER BY stat_date ASC`,
-      [startDate, endDate]
+      [startDate, endDate],
     );
   }
 }

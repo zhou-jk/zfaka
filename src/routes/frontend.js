@@ -153,7 +153,7 @@ router.get('/order/:orderNo/download', asyncHandler(async (req, res) => {
   content += `商品: ${order.product_name}\n`;
   content += `数量: ${order.quantity}\n`;
   content += `下单时间: ${order.created_at}\n`;
-  content += `\n========== 卡密信息 ==========\n\n`;
+  content += '\n========== 卡密信息 ==========\n\n';
   
   cards.forEach((card, index) => {
     content += `【卡密 ${index + 1}】\n`;
@@ -161,10 +161,10 @@ router.get('/order/:orderNo/download', asyncHandler(async (req, res) => {
     if (card.card_secret) {
       content += `密码: ${card.card_secret}\n`;
     }
-    content += `\n`;
+    content += '\n';
   });
   
-  content += `\n========== END ==========\n`;
+  content += '\n========== END ==========\n';
   content += `下载时间: ${new Date().toLocaleString('zh-CN')}\n`;
   
   // 设置下载头

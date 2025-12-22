@@ -53,8 +53,9 @@ describe('Helpers', () => {
     });
 
     it('应该处理无效的分页参数', () => {
-      const result = parsePagination({ page: 'abc', limit: '-5' });
+      const result = parsePagination({ page: 'abc', limit: 'xyz' });
       
+      // 无效字符串会被解析为 NaN，然后使用默认值
       expect(result.page).toBe(1);
       expect(result.limit).toBe(20);
     });

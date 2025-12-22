@@ -21,7 +21,7 @@ class BusinessError extends Error {
 /**
  * 404 处理中间件
  */
-function notFoundHandler(req, res, next) {
+function notFoundHandler(req, res, _next) {
   // API 请求返回 JSON
   if (req.path.startsWith('/api/')) {
     return fail(res, ErrorCodes.NOT_FOUND, null, 404);
@@ -38,7 +38,7 @@ function notFoundHandler(req, res, next) {
 /**
  * 全局错误处理中间件
  */
-function errorHandler(err, req, res, next) {
+function errorHandler(err, req, res, _next) {
   // 记录错误日志
   logger.error('请求错误:', {
     method: req.method,

@@ -27,7 +27,7 @@ const logFormat = winston.format.combine(
       log += `\n${stack}`;
     }
     return log;
-  })
+  }),
 );
 
 // 控制台格式（带颜色）
@@ -36,7 +36,7 @@ const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.printf(({ level, message, timestamp }) => {
     return `${timestamp} ${level}: ${message}`;
-  })
+  }),
 );
 
 // 创建 Logger 实例
@@ -82,7 +82,7 @@ logger.logOperation = async function(operatorId, opType, targetType, targetId, c
     await db.query(
       `INSERT INTO operation_log (operator_id, op_type, target_type, target_id, content, ip, created_at)
        VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-      [operatorId, opType, targetType, targetId, JSON.stringify(content), ip]
+      [operatorId, opType, targetType, targetId, JSON.stringify(content), ip],
     );
   } catch (error) {
     logger.error('记录操作日志失败:', error);

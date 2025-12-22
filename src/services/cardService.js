@@ -3,7 +3,6 @@
  */
 
 const db = require('../utils/database');
-const redis = require('../utils/redis');
 const logger = require('../utils/logger');
 const productService = require('./productService');
 const { BusinessError } = require('../middlewares/errorHandler');
@@ -62,7 +61,7 @@ class CardService {
   async getAvailableCount(productId) {
     const result = await db.queryOne(
       'SELECT COUNT(*) as count FROM card_code WHERE product_id = ? AND status = 0',
-      [productId]
+      [productId],
     );
     return result.count;
   }
@@ -96,7 +95,7 @@ class CardService {
     const existingCodes = new Set();
     const existingRows = await db.query(
       'SELECT card_code FROM card_code WHERE product_id = ?',
-      [productId]
+      [productId],
     );
     existingRows.forEach(row => existingCodes.add(row.card_code));
     
@@ -202,7 +201,7 @@ class CardService {
          ORDER BY id ASC 
          LIMIT ? 
          FOR UPDATE`,
-        [productId, quantity]
+        [productId, quantity],
       );
       
       if (cards.length < quantity) {
@@ -218,7 +217,7 @@ class CardService {
         `UPDATE card_code 
          SET status = 1, order_id = ?, sold_at = ?, updated_at = ? 
          WHERE id IN (${placeholders})`,
-        [orderId, now, now, ...cardIds]
+        [orderId, now, now, ...cardIds],
       );
       
       if (shouldCommit) {
@@ -243,13 +242,13 @@ class CardService {
       `UPDATE card_code 
        SET status = 0, order_id = NULL, sold_at = NULL 
        WHERE order_id = ? AND status = 1`,
-      [orderId]
+      [orderId],
     );
     
     // 获取商品ID并更新库存
     const card = await db.queryOne(
       'SELECT product_id FROM card_code WHERE order_id = ? LIMIT 1',
-      [orderId]
+      [orderId],
     );
     
     if (card) {
@@ -495,7 +494,7 @@ class CardService {
        LEFT JOIN product p ON b.product_id = p.id
        ORDER BY b.id DESC
        LIMIT ?`,
-      [limit]
+      [limit],
     );
     return rows;
   }
@@ -509,7 +508,7 @@ class CardService {
        FROM card_code 
        WHERE order_id = ? AND status = 1 
        ORDER BY id ASC`,
-      [orderId]
+      [orderId],
     );
   }
 }

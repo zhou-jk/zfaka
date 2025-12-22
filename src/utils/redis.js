@@ -94,7 +94,7 @@ class RedisClient {
    */
   async get(key, parse = true) {
     const value = await this.client.get(key);
-    if (value === null) return null;
+    if (value === null) {return null;}
     if (parse) {
       try {
         return JSON.parse(value);
@@ -179,7 +179,7 @@ class RedisClient {
       lockValue,
       'EX',
       ttl,
-      'NX'
+      'NX',
     );
     if (result === 'OK') {
       return { success: true, value: lockValue };
@@ -237,7 +237,7 @@ class RedisClient {
 
   async hget(key, field, parse = true) {
     const value = await this.client.hget(key, field);
-    if (value === null) return null;
+    if (value === null) {return null;}
     if (parse) {
       try {
         return JSON.parse(value);
@@ -250,7 +250,7 @@ class RedisClient {
 
   async hgetall(key, parse = true) {
     const data = await this.client.hgetall(key);
-    if (!data || Object.keys(data).length === 0) return null;
+    if (!data || Object.keys(data).length === 0) {return null;}
     if (parse) {
       const result = {};
       for (const [field, value] of Object.entries(data)) {

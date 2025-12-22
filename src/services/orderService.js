@@ -3,14 +3,13 @@
  */
 
 const db = require('../utils/database');
-const redis = require('../utils/redis');
 const logger = require('../utils/logger');
 const config = require('../config');
 const productService = require('./productService');
 const cardService = require('./cardService');
 const { BusinessError } = require('../middlewares/errorHandler');
 const { ErrorCodes } = require('../utils/response');
-const { generateOrderNo, getExpireTime, isExpired, getClientIp } = require('../utils/helpers');
+const { generateOrderNo, getExpireTime, getClientIp } = require('../utils/helpers');
 
 // 订单状态枚举
 const OrderStatus = {
@@ -117,7 +116,7 @@ class OrderService {
        FROM order_main o
        LEFT JOIN product p ON o.product_id = p.id
        WHERE o.order_no = ?`,
-      [orderNo]
+      [orderNo],
     );
   }
   
@@ -130,7 +129,7 @@ class OrderService {
        FROM order_main o
        LEFT JOIN product p ON o.product_id = p.id
        WHERE o.id = ?`,
-      [id]
+      [id],
     );
   }
   
@@ -202,17 +201,17 @@ class OrderService {
 
     // 辅助函数：安全获取非空字符串
     const safeStr = (val) => {
-      if (val === undefined || val === null) return null;
+      if (val === undefined || val === null) {return null;}
       const s = Array.isArray(val) ? val[0] : val;
-      if (typeof s !== 'string') return null;
+      if (typeof s !== 'string') {return null;}
       const trimmed = s.trim();
-      if (!trimmed || trimmed === 'undefined' || trimmed === 'null') return null;
+      if (!trimmed || trimmed === 'undefined' || trimmed === 'null') {return null;}
       return trimmed;
     };
 
     // 辅助函数：安全获取整数
     const safeInt = (val) => {
-      if (val === undefined || val === null || val === '') return null;
+      if (val === undefined || val === null || val === '') {return null;}
       const s = Array.isArray(val) ? val[0] : val;
       const n = parseInt(s, 10);
       return Number.isNaN(n) ? null : n;
@@ -280,17 +279,17 @@ class OrderService {
 
     // 辅助函数：安全获取非空字符串
     const safeStr = (val) => {
-      if (val === undefined || val === null) return null;
+      if (val === undefined || val === null) {return null;}
       const s = Array.isArray(val) ? val[0] : val;
-      if (typeof s !== 'string') return null;
+      if (typeof s !== 'string') {return null;}
       const trimmed = s.trim();
-      if (!trimmed || trimmed === 'undefined' || trimmed === 'null') return null;
+      if (!trimmed || trimmed === 'undefined' || trimmed === 'null') {return null;}
       return trimmed;
     };
 
     // 辅助函数：安全获取整数
     const safeInt = (val) => {
-      if (val === undefined || val === null || val === '') return null;
+      if (val === undefined || val === null || val === '') {return null;}
       const s = Array.isArray(val) ? val[0] : val;
       const n = parseInt(s, 10);
       return Number.isNaN(n) ? null : n;
@@ -428,7 +427,7 @@ class OrderService {
       // 更新商品销量
       await tx.query(
         'UPDATE product SET sold_count = sold_count + ?, stock_count = stock_count - ? WHERE id = ?',
-        [order.quantity, order.quantity, order.product_id]
+        [order.quantity, order.quantity, order.product_id],
       );
       
       logger.info(`订单发货成功: ${order.order_no}`, {
@@ -475,7 +474,7 @@ class OrderService {
     // 检查是否已有发货记录
     const existingDelivery = await db.queryOne(
       'SELECT COUNT(*) as count FROM delivery WHERE order_id = ?',
-      [orderId]
+      [orderId],
     );
     
     if (existingDelivery.count > 0) {
@@ -508,13 +507,13 @@ class OrderService {
         order_status: OrderStatus.COMPLETED,
         delivery_status: DeliveryStatus.DELIVERED,
         delivery_time: new Date(),
-        admin_remark: `管理员手动发货`,
+        admin_remark: '管理员手动发货',
       }, { id: orderId });
       
       // 更新商品销量
       await tx.query(
         'UPDATE product SET sold_count = sold_count + ?, stock_count = stock_count - ? WHERE id = ?',
-        [order.quantity, order.quantity, order.product_id]
+        [order.quantity, order.quantity, order.product_id],
       );
       
       // 记录操作日志

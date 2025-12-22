@@ -29,7 +29,7 @@ module.exports = {
     // 异步处理
     'no-async-promise-executor': 'error',
     'require-await': 'off', // 允许空 async 函数
-    'no-return-await': 'warn',
+    'no-return-await': 'off', // 允许 return await（更清晰的错误堆栈）
     
     // 安全相关
     'no-eval': 'error',

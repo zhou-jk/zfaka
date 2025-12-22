@@ -21,4 +21,8 @@ beforeAll(async () => {
 afterAll(async () => {
   // 测试结束后的清理工作
   console.log('✅ 测试运行完成');
+  
+  // 清理所有 mock
+  jest.clearAllMocks();
+  jest.restoreAllMocks();
 });

@@ -8,7 +8,7 @@ const productService = require('../../services/productService');
 const { asyncHandler } = require('../../middlewares/errorHandler');
 const { success, fail, paginated, ErrorCodes } = require('../../utils/response');
 const { requireAdminAuth } = require('../../middlewares/auth');
-const { validators, body, validate } = require('../../middlewares/validator');
+const { validators } = require('../../middlewares/validator');
 const { parsePagination } = require('../../utils/helpers');
 
 /**

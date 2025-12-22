@@ -5,10 +5,8 @@
 
 const bcrypt = require('bcryptjs');
 const db = require('../utils/database');
-const redis = require('../utils/redis');
 const logger = require('../utils/logger');
 const config = require('../config');
-const { generateToken } = require('../middlewares/auth');
 const { BusinessError } = require('../middlewares/errorHandler');
 const { ErrorCodes } = require('../utils/response');
 const { getClientIp } = require('../utils/helpers');
@@ -25,7 +23,7 @@ class UserService {
     // 查询用户
     const user = await db.queryOne(
       'SELECT * FROM sys_user WHERE username = ? AND role = 1',
-      [username]
+      [username],
     );
     
     if (!user) {
@@ -82,7 +80,7 @@ class UserService {
   async getUserById(id) {
     const user = await db.queryOne(
       'SELECT id, username, email, phone, role, avatar, status, last_login_at, created_at FROM sys_user WHERE id = ?',
-      [id]
+      [id],
     );
     return user;
   }
@@ -93,7 +91,7 @@ class UserService {
   async getUserByUsername(username) {
     const user = await db.queryOne(
       'SELECT id, username, email, phone, role, status FROM sys_user WHERE username = ?',
-      [username]
+      [username],
     );
     return user;
   }
@@ -137,7 +135,7 @@ class UserService {
       // 检查用户名是否已存在
       const existing = await db.queryOne(
         'SELECT id FROM sys_user WHERE username = ? AND id != ?',
-        [data.username, id]
+        [data.username, id],
       );
       if (existing) {
         throw new BusinessError({
@@ -147,10 +145,10 @@ class UserService {
       }
       updateData.username = data.username;
     }
-    if (data.email !== undefined) updateData.email = data.email;
-    if (data.phone !== undefined) updateData.phone = data.phone;
-    if (data.avatar !== undefined) updateData.avatar = data.avatar;
-    if (data.status !== undefined) updateData.status = data.status;
+    if (data.email !== undefined) {updateData.email = data.email;}
+    if (data.phone !== undefined) {updateData.phone = data.phone;}
+    if (data.avatar !== undefined) {updateData.avatar = data.avatar;}
+    if (data.status !== undefined) {updateData.status = data.status;}
     
     if (Object.keys(updateData).length === 0) {
       return { affectedRows: 0 };
@@ -165,7 +163,7 @@ class UserService {
   async changePassword(id, oldPassword, newPassword) {
     const user = await db.queryOne(
       'SELECT password_hash FROM sys_user WHERE id = ?',
-      [id]
+      [id],
     );
     
     if (!user) {

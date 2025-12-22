@@ -135,7 +135,7 @@ class ProductService {
     // 实时查询库存
     const stockResult = await db.queryOne(
       'SELECT COUNT(*) as count FROM card_code WHERE product_id = ? AND status = 0',
-      [id]
+      [id],
     );
     product.stock_count = stockResult.count;
     
@@ -150,7 +150,7 @@ class ProductService {
     if (data.code) {
       const existing = await db.queryOne(
         'SELECT id FROM product WHERE code = ?',
-        [data.code]
+        [data.code],
       );
       if (existing) {
         throw new BusinessError({
@@ -200,7 +200,7 @@ class ProductService {
     if (data.code) {
       const existing = await db.queryOne(
         'SELECT id FROM product WHERE code = ? AND id != ?',
-        [data.code, id]
+        [data.code, id],
       );
       if (existing) {
         throw new BusinessError({
@@ -215,7 +215,7 @@ class ProductService {
     const allowedFields = [
       'name', 'code', 'category_id', 'description', 'content', 'price',
       'original_price', 'cost_price', 'min_quantity', 'max_quantity',
-      'image', 'status', 'sort_order', 'is_hot', 'is_recommend', 'delivery_type'
+      'image', 'status', 'sort_order', 'is_hot', 'is_recommend', 'delivery_type',
     ];
     
     for (const field of allowedFields) {
@@ -244,7 +244,7 @@ class ProductService {
     // 检查是否有未售卡密
     const cardCount = await db.queryOne(
       'SELECT COUNT(*) as count FROM card_code WHERE product_id = ? AND status = 0',
-      [id]
+      [id],
     );
     
     if (cardCount.count > 0) {
@@ -266,7 +266,7 @@ class ProductService {
   async updateProductStock(productId) {
     const result = await db.queryOne(
       'SELECT COUNT(*) as count FROM card_code WHERE product_id = ? AND status = 0',
-      [productId]
+      [productId],
     );
     
     await db.update('product', { stock_count: result.count }, { id: productId });
@@ -299,7 +299,7 @@ class ProductService {
    */
   async getCategoryList() {
     const categories = await db.query(
-      'SELECT * FROM product_category WHERE status = 1 ORDER BY sort_order DESC, id ASC'
+      'SELECT * FROM product_category WHERE status = 1 ORDER BY sort_order DESC, id ASC',
     );
     return categories;
   }
@@ -330,11 +330,11 @@ class ProductService {
    */
   async updateCategory(id, data) {
     const updateData = {};
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.parent_id !== undefined) updateData.parent_id = data.parent_id;
-    if (data.icon !== undefined) updateData.icon = data.icon;
-    if (data.sort_order !== undefined) updateData.sort_order = data.sort_order;
-    if (data.status !== undefined) updateData.status = data.status;
+    if (data.name !== undefined) {updateData.name = data.name;}
+    if (data.parent_id !== undefined) {updateData.parent_id = data.parent_id;}
+    if (data.icon !== undefined) {updateData.icon = data.icon;}
+    if (data.sort_order !== undefined) {updateData.sort_order = data.sort_order;}
+    if (data.status !== undefined) {updateData.status = data.status;}
     
     return await db.update('product_category', updateData, { id });
   }
@@ -346,7 +346,7 @@ class ProductService {
     // 检查是否有商品使用该分类
     const productCount = await db.queryOne(
       'SELECT COUNT(*) as count FROM product WHERE category_id = ?',
-      [id]
+      [id],
     );
     
     if (productCount.count > 0) {

@@ -265,7 +265,7 @@ router.get('/admin/export', requireAdminAuth, asyncHandler(async (req, res) => {
   // 生成 CSV
   const statusMap = {
     0: '待支付', 1: '支付中', 2: '已支付待发货', 3: '已完成',
-    4: '待人工处理', 5: '已取消', 6: '已退款'
+    4: '待人工处理', 5: '已取消', 6: '已退款',
   };
   
   let csv = '\uFEFF订单号,商品,数量,单价,总金额,实付金额,邮箱,状态,支付渠道,支付时间,下单时间\n';

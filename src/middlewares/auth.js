@@ -5,7 +5,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const { ErrorCodes, fail } = require('../utils/response');
-const { BusinessError } = require('./errorHandler');
 
 /**
  * 验证管理员登录状态（Session 方式）

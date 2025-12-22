@@ -11,7 +11,6 @@ const config = require('../config');
 const orderService = require('./orderService');
 const { BusinessError } = require('../middlewares/errorHandler');
 const { ErrorCodes } = require('../utils/response');
-const { generateUUID, objectToQueryString } = require('../utils/helpers');
 
 // 支付状态
 const PayStatus = {
@@ -176,7 +175,7 @@ class PaymentService {
     // 查询支付记录
     const payment = await db.queryOne(
       'SELECT * FROM payment WHERE pay_no = ?',
-      [payNo]
+      [payNo],
     );
     
     if (!payment) {
@@ -310,7 +309,7 @@ class PaymentService {
     // 查询支付记录
     const payment = await db.queryOne(
       'SELECT p.*, o.order_no FROM payment p JOIN order_main o ON p.order_id = o.id WHERE p.pay_no = ?',
-      [payNo]
+      [payNo],
     );
     
     if (!payment) {
@@ -333,7 +332,7 @@ class PaymentService {
        FROM payment p 
        JOIN order_main o ON p.order_id = o.id 
        WHERE p.pay_no = ?`,
-      [payNo]
+      [payNo],
     );
     
     return payment;
@@ -345,7 +344,7 @@ class PaymentService {
   async getPaymentsByOrderId(orderId) {
     return await db.query(
       'SELECT * FROM payment WHERE order_id = ? ORDER BY id DESC',
-      [orderId]
+      [orderId],
     );
   }
   

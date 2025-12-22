@@ -12,14 +12,10 @@ const fs = require('fs');
 const productService = require('../../services/productService');
 const cardService = require('../../services/cardService');
 const orderService = require('../../services/orderService');
-const statisticsService = require('../../services/statisticsService');
 const { asyncHandler } = require('../../middlewares/errorHandler');
 const { requireAdminAuth } = require('../../middlewares/auth');
-const { success, fail, paginated } = require('../../utils/response');
-const { parsePagination } = require('../../utils/helpers');
-const config = require('../../config');
+const { success, fail } = require('../../utils/response');
 const redis = require('../../utils/redis');
-const logger = require('../../utils/logger');
 
 // 所有 admin API 都需要登录验证
 router.use(requireAdminAuth);
@@ -47,7 +43,7 @@ const imageStorage = multer.diskStorage({
     const filename = uniqueSuffix + path.extname(file.originalname);
     console.log('Upload filename:', filename);
     cb(null, filename);
-  }
+  },
 });
 
 const imageUpload = multer({
@@ -62,7 +58,7 @@ const imageUpload = multer({
     } else {
       cb(new Error('只支持 jpg, png, gif, webp 图片格式'));
     }
-  }
+  },
 });
 
 // 卡密文件上传配置
@@ -77,7 +73,7 @@ const cardUpload = multer({
     } else {
       cb(new Error('只支持 .txt 或 .csv 文件'));
     }
-  }
+  },
 });
 
 // ========== 商品管理 ==========
@@ -237,7 +233,7 @@ router.post('/cards/import', (req, res, next) => {
   // 支持两种字段名：product_id 和 productId
   const productId = req.body.product_id || req.body.productId;
   const cardsText = req.body.cards_text || req.body.cardsText;
-  const skipDuplicate = req.body.skip_duplicate || req.body.skipDuplicate;
+  const _skipDuplicate = req.body.skip_duplicate || req.body.skipDuplicate; // TODO: 待实现跳过重复逻辑
   
   console.log('Card import request:', { productId, hasFile: !!req.file, hasText: !!cardsText });
   
@@ -279,7 +275,7 @@ router.post('/cards/import', (req, res, next) => {
     parseInt(productId),
     cards,
     req.session.user.id,
-    req.file?.originalname || '手动输入'
+    req.file?.originalname || '手动输入',
   );
   
   success(res, result, `成功导入 ${result.imported} 张卡密`);
@@ -521,7 +517,7 @@ router.get('/statistics/summary', asyncHandler(async (req, res) => {
   
   // 计算环比变化
   const calcChange = (current, prev) => {
-    if (!prev || prev === 0) return current > 0 ? 100 : 0;
+    if (!prev || prev === 0) {return current > 0 ? 100 : 0;}
     return Math.round(((current - prev) / prev) * 100);
   };
   
@@ -678,7 +674,7 @@ router.post('/logs/clear', asyncHandler(async (req, res) => {
   const db = require('../../utils/database');
   const [result] = await db.query(
     'DELETE FROM operation_logs WHERE created_at < ?',
-    [cutoffDate]
+    [cutoffDate],
   );
   
   success(res, { deleted: result.affectedRows }, `已清理 ${result.affectedRows} 条日志`);
@@ -700,7 +696,7 @@ router.post('/settings', asyncHandler(async (req, res) => {
       `INSERT INTO system_settings (setting_key, setting_value, updated_at) 
        VALUES (?, ?, NOW()) 
        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = NOW()`,
-      [key, typeof value === 'object' ? JSON.stringify(value) : String(value)]
+      [key, typeof value === 'object' ? JSON.stringify(value) : String(value)],
     );
   }
   
@@ -715,7 +711,7 @@ router.post('/settings', asyncHandler(async (req, res) => {
  * POST /api/admin/settings/test-email
  */
 router.post('/settings/test-email', asyncHandler(async (req, res) => {
-  const { email } = req.body;
+  const _email = req.body.email; // TODO: 待实现邮件发送
   
   // TODO: 实现邮件发送测试
   // 这里先返回成功

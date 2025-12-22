@@ -6,7 +6,6 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 
 const productService = require('../services/productService');
 const cardService = require('../services/cardService');
@@ -14,9 +13,8 @@ const orderService = require('../services/orderService');
 const statisticsService = require('../services/statisticsService');
 const { asyncHandler } = require('../middlewares/errorHandler');
 const { requireAdminAuth } = require('../middlewares/auth');
-const { success, fail, paginated } = require('../utils/response');
-const { parsePagination, formatDate } = require('../utils/helpers');
-const logger = require('../utils/logger');
+const { success, fail } = require('../utils/response');
+const { parsePagination } = require('../utils/helpers');
 
 // 文件上传配置
 const upload = multer({
@@ -199,7 +197,7 @@ router.post('/cards/import', upload.single('file'), asyncHandler(async (req, res
       parseInt(product_id),
       cards,
       req.session.user.id,
-      file.originalname
+      file.originalname,
     );
     
     success(res, result, `成功导入 ${result.success} 条卡密`);
@@ -239,7 +237,7 @@ router.get('/cards/export', asyncHandler(async (req, res) => {
   });
   
   // 生成文本内容
-  let content = cards.map(card => {
+  const content = cards.map(card => {
     if (card.card_secret) {
       return `${card.card_code}\t${card.card_secret}`;
     }
@@ -376,7 +374,7 @@ router.post('/settings', asyncHandler(async (req, res) => {
     for (const [key, value] of Object.entries(configs)) {
       await db.query(
         'UPDATE sys_config SET config_value = ? WHERE config_key = ?',
-        [value, key]
+        [value, key],
       );
     }
   }

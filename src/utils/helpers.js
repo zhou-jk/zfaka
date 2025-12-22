@@ -77,7 +77,7 @@ function toCents(yuan) {
  * 隐藏邮箱中间部分
  */
 function maskEmail(email) {
-  if (!email) return '';
+  if (!email) {return '';}
   const [user, domain] = email.split('@');
   if (user.length <= 2) {
     return `${user[0]}***@${domain}`;
@@ -89,7 +89,7 @@ function maskEmail(email) {
  * 隐藏手机号中间部分
  */
 function maskPhone(phone) {
-  if (!phone || phone.length < 7) return phone;
+  if (!phone || phone.length < 7) {return phone;}
   return phone.slice(0, 3) + '****' + phone.slice(-4);
 }
 
@@ -97,7 +97,7 @@ function maskPhone(phone) {
  * XSS 过滤
  */
 function escapeHtml(str) {
-  if (!str) return '';
+  if (!str) {return '';}
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -157,7 +157,7 @@ async function retry(fn, maxRetries = 3, delay = 1000) {
  * 日期格式化
  */
 function formatDate(date, format = 'YYYY-MM-DD HH:mm:ss') {
-  if (!date) return '';
+  if (!date) {return '';}
   const d = new Date(date);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -187,7 +187,7 @@ function getExpireTime(minutes) {
  * 检查是否过期
  */
 function isExpired(expireTime) {
-  if (!expireTime) return false;
+  if (!expireTime) {return false;}
   return new Date(expireTime) < new Date();
 }
 

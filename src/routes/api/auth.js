@@ -10,7 +10,6 @@ const { success, fail, ErrorCodes } = require('../../utils/response');
 const { validators } = require('../../middlewares/validator');
 const { loginRateLimiter } = require('../../middlewares/rateLimiter');
 const { requireAdminAuth } = require('../../middlewares/auth');
-const { getClientIp } = require('../../utils/helpers');
 
 /**
  * 管理员登录
