@@ -61,7 +61,7 @@
                 <div id="fileInfo" class="mt-3 d-none">
                   <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
                     <span><i class="bi bi-file-text me-2"></i><span id="fileName"></span></span>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="clearFileBtn">
                       <i class="bi bi-x"></i>
                     </button>
                   </div>
@@ -205,6 +205,11 @@
     fileUpload.value = '';
     document.getElementById('fileInfo').classList.add('d-none');
   }
+
+  // 绑定清除文件按钮
+  document.getElementById('clearFileBtn').addEventListener('click', function() {
+    clearFile();
+  });
 
   document.getElementById('importForm').addEventListener('submit', async function(e) {
     e.preventDefault();

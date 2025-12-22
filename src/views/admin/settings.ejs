@@ -133,7 +133,7 @@
             <label class="form-label">发件人名称</label>
             <input type="text" class="form-control" name="smtp_from_name" value="<%= settings?.smtp_from_name || '自动售货系统' %>">
           </div>
-          <button type="button" class="btn btn-outline-primary" onclick="testEmail()">
+          <button type="button" class="btn btn-outline-primary" id="testEmailBtn">
             <i class="bi bi-send me-2"></i>发送测试邮件
           </button>
         </div>
@@ -144,7 +144,7 @@
         <button type="submit" class="btn btn-primary btn-lg">
           <i class="bi bi-check-lg me-2"></i>保存设置
         </button>
-        <button type="button" class="btn btn-outline-secondary btn-lg" onclick="location.reload()">
+        <button type="button" class="btn btn-outline-secondary btn-lg" id="resetBtn">
           <i class="bi bi-arrow-clockwise me-2"></i>重置
         </button>
       </div>
@@ -160,13 +160,13 @@
       <div class="card-body">
         <p class="text-muted small">清除系统缓存可以解决部分数据不同步问题</p>
         <div class="d-grid gap-2">
-          <button type="button" class="btn btn-outline-warning" onclick="clearCache('product')">
+          <button type="button" class="btn btn-outline-warning" data-cache="product">
             <i class="bi bi-box me-2"></i>清除商品缓存
           </button>
-          <button type="button" class="btn btn-outline-warning" onclick="clearCache('config')">
+          <button type="button" class="btn btn-outline-warning" data-cache="config">
             <i class="bi bi-gear me-2"></i>清除配置缓存
           </button>
-          <button type="button" class="btn btn-outline-danger" onclick="clearCache('all')">
+          <button type="button" class="btn btn-outline-danger" data-cache="all">
             <i class="bi bi-trash me-2"></i>清除所有缓存
           </button>
         </div>
@@ -283,4 +283,21 @@
       showAlert(error.message || '清除失败', 'danger');
     }
   }
+
+  // 绑定测试邮件按钮
+  document.getElementById('testEmailBtn').addEventListener('click', function() {
+    testEmail();
+  });
+
+  // 绑定重置按钮
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    location.reload();
+  });
+
+  // 绑定清除缓存按钮
+  document.querySelectorAll('.btn-cache').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      clearCache(this.dataset.cache);
+    });
+  });
 </script>

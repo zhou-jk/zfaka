@@ -10,9 +10,9 @@
     <small class="text-muted">查看销售数据和趋势分析</small>
   </div>
   <div class="btn-group">
-    <button type="button" class="btn btn-outline-secondary active" onclick="loadData(7)">7天</button>
-    <button type="button" class="btn btn-outline-secondary" onclick="loadData(30)">30天</button>
-    <button type="button" class="btn btn-outline-secondary" onclick="loadData(90)">90天</button>
+    <button type="button" class="btn btn-outline-secondary active" data-days="7">7天</button>
+    <button type="button" class="btn btn-outline-secondary" data-days="30">30天</button>
+    <button type="button" class="btn btn-outline-secondary" data-days="90">90天</button>
   </div>
 </div>
 
@@ -172,8 +172,8 @@
 
   async function loadData(days) {
     // 更新按钮状态
-    document.querySelectorAll('.btn-group .btn').forEach((btn, i) => {
-      btn.classList.toggle('active', [7, 30, 90][i] === days);
+    document.querySelectorAll('.btn-group .btn').forEach(function(btn) {
+      btn.classList.toggle('active', parseInt(btn.dataset.days) === days);
     });
 
     try {
@@ -387,6 +387,13 @@
     });
     document.getElementById('statusStats').innerHTML = statsHtml || '<div class="col text-muted">暂无数据</div>';
   }
+
+  // 绑定时间按钮事件
+  document.querySelectorAll('.btn-group .btn[data-days]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      loadData(parseInt(this.dataset.days));
+    });
+  });
 
   // 初始加载7天数据
   loadData(7);

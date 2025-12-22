@@ -95,8 +95,8 @@
                 <td><%= p.sales_count || 0 %></td>
                 <td>
                   <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" <%= p.status ? 'checked' : '' %> 
-                           onchange="toggleStatus(<%= p.id %>, this.checked)">
+                    <input class="form-check-input status-toggle" type="checkbox" <%= p.status ? 'checked' : '' %> 
+                           data-id="<%= p.id %>">
                   </div>
                 </td>
                 <td>
@@ -111,8 +111,8 @@
                     <a href="/admin/cards?product_id=<%= p.id %>" class="btn btn-outline-info" title="卡密">
                       <i class="bi bi-key"></i>
                     </a>
-                    <button type="button" class="btn btn-outline-danger" title="删除" 
-                            onclick="deleteProduct(<%= p.id %>)">
+                    <button type="button" class="btn btn-outline-danger btn-delete" title="删除" 
+                            data-id="<%= p.id %>">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -173,7 +173,7 @@
   }
 
   async function deleteProduct(id) {
-    confirmDelete('确定要删除该商品吗？删除后无法恢复。', async () => {
+    confirmDelete('确定要删除该商品吗？删除后无法恢复。', async function() {
       try {
         const response = await fetch('/api/admin/products/' + id, {
           method: 'DELETE',
@@ -187,4 +187,18 @@
       }
     });
   }
+
+  // 绑定删除按钮事件
+  document.querySelectorAll('.btn-delete').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      deleteProduct(parseInt(this.dataset.id));
+    });
+  });
+
+  // 绑定状态切换开关
+  document.querySelectorAll('.status-toggle').forEach(function(input) {
+    input.addEventListener('change', function() {
+      toggleStatus(parseInt(this.dataset.id), this.checked);
+    });
+  });
 </script>

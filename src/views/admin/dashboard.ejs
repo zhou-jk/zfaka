@@ -67,8 +67,8 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">销售趋势</h5>
         <div class="btn-group btn-group-sm">
-          <button type="button" class="btn btn-outline-secondary active" onclick="loadChart(7)">7天</button>
-          <button type="button" class="btn btn-outline-secondary" onclick="loadChart(30)">30天</button>
+          <button type="button" class="btn btn-outline-secondary active" data-days="7">7天</button>
+          <button type="button" class="btn btn-outline-secondary" data-days="30">30天</button>
         </div>
       </div>
       <div class="card-body">
@@ -244,9 +244,9 @@
 
   async function loadChart(days) {
     // 更新按钮状态
-    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+    document.querySelectorAll('.btn-group .btn').forEach(function(btn) {
       btn.classList.remove('active');
-      if (btn.textContent.includes(days + '天')) {
+      if (parseInt(btn.dataset.days) === days) {
         btn.classList.add('active');
       }
     });
@@ -269,4 +269,11 @@
   } else {
     loadChart(7);
   }
+
+  // 绑定时间按钮事件
+  document.querySelectorAll('.btn-group .btn[data-days]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      loadChart(parseInt(this.dataset.days));
+    });
+  });
 </script>

@@ -26,6 +26,12 @@
       }
     }
 
+    // 绑定退出登录按钮
+    document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      logout();
+    });
+
     // 通用提示
     function showAlert(message, type = 'success') {
       const alertDiv = document.createElement('div');
