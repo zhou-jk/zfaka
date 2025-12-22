@@ -402,6 +402,7 @@ router.get('/categories', asyncHandler(async (req, res) => {
 router.get('/profile', asyncHandler(async (req, res) => {
   res.render('admin/profile', {
     title: '个人设置',
+    user: req.session.user,
   });
 }));
 
@@ -411,6 +412,7 @@ router.get('/profile', asyncHandler(async (req, res) => {
 router.get('/password', asyncHandler(async (req, res) => {
   res.render('admin/password', {
     title: '修改密码',
+    user: req.session.user,
   });
 }));
 
