@@ -397,11 +397,20 @@ router.get('/categories', asyncHandler(async (req, res) => {
 }));
 
 /**
- * 修改密码页面
+ * 个人信息页面
  */
 router.get('/profile', asyncHandler(async (req, res) => {
   res.render('admin/profile', {
     title: '个人设置',
+  });
+}));
+
+/**
+ * 修改密码页面
+ */
+router.get('/password', asyncHandler(async (req, res) => {
+  res.render('admin/password', {
+    title: '修改密码',
   });
 }));
 

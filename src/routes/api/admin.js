@@ -755,4 +755,31 @@ router.post('/upload/image', imageUpload.single('image'), asyncHandler(async (re
   success(res, { url: imageUrl }, '上传成功');
 }));
 
+// ========== 用户管理 ==========
+
+/**
+ * 修改密码
+ * PUT /api/admin/password
+ */
+router.put('/password', asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword, confirmPassword } = req.body;
+  
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    return fail(res, '请填写完整的密码信息');
+  }
+  
+  if (newPassword !== confirmPassword) {
+    return fail(res, '两次输入的新密码不一致');
+  }
+  
+  if (newPassword.length < 6) {
+    return fail(res, '新密码长度不能少于6位');
+  }
+  
+  const userService = require('../../services/userService');
+  await userService.changePassword(req.session.user.id, oldPassword, newPassword);
+  
+  success(res, null, '密码修改成功');
+}));
+
 module.exports = router;
