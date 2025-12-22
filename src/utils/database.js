@@ -87,17 +87,40 @@ class Database {
   }
 
   /**
+   * 验证标识符（表名/字段名）是否合法，防止SQL注入
+   * @param {string} identifier 标识符
+   * @returns {boolean} 是否合法
+   */
+  isValidIdentifier(identifier) {
+    return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(identifier);
+  }
+
+  /**
    * 插入数据
    * @param {string} table 表名
    * @param {Object} data 数据对象
    * @returns {Promise<Object>} 插入结果（含 insertId）
    */
   async insert(table, data) {
+    // 验证表名
+    if (!this.isValidIdentifier(table)) {
+      throw new Error(`Invalid table name: ${table}`);
+    }
+    
     const keys = Object.keys(data);
+    
+    // 验证字段名
+    for (const key of keys) {
+      if (!this.isValidIdentifier(key)) {
+        throw new Error(`Invalid column name: ${key}`);
+      }
+    }
+    
     const values = Object.values(data);
     const placeholders = keys.map(() => '?').join(', ');
+    const escapedKeys = keys.map(k => `\`${k}\``).join(', ');
     
-    const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
+    const sql = `INSERT INTO \`${table}\` (${escapedKeys}) VALUES (${placeholders})`;
     const result = await this.query(sql, values);
     
     return {
@@ -114,10 +137,25 @@ class Database {
    * @returns {Promise<Object>} 更新结果
    */
   async update(table, data, where) {
-    const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
-    const whereClause = Object.keys(where).map(key => `${key} = ?`).join(' AND ');
+    // 验证表名
+    if (!this.isValidIdentifier(table)) {
+      throw new Error(`Invalid table name: ${table}`);
+    }
     
-    const sql = `UPDATE ${table} SET ${setClause} WHERE ${whereClause}`;
+    const dataKeys = Object.keys(data);
+    const whereKeys = Object.keys(where);
+    
+    // 验证字段名
+    for (const key of [...dataKeys, ...whereKeys]) {
+      if (!this.isValidIdentifier(key)) {
+        throw new Error(`Invalid column name: ${key}`);
+      }
+    }
+    
+    const setClause = dataKeys.map(key => `\`${key}\` = ?`).join(', ');
+    const whereClause = whereKeys.map(key => `\`${key}\` = ?`).join(' AND ');
+    
+    const sql = `UPDATE \`${table}\` SET ${setClause} WHERE ${whereClause}`;
     const params = [...Object.values(data), ...Object.values(where)];
     
     const result = await this.query(sql, params);
@@ -134,8 +172,22 @@ class Database {
    * @returns {Promise<Object>} 删除结果
    */
   async delete(table, where) {
-    const whereClause = Object.keys(where).map(key => `${key} = ?`).join(' AND ');
-    const sql = `DELETE FROM ${table} WHERE ${whereClause}`;
+    // 验证表名
+    if (!this.isValidIdentifier(table)) {
+      throw new Error(`Invalid table name: ${table}`);
+    }
+    
+    const whereKeys = Object.keys(where);
+    
+    // 验证字段名
+    for (const key of whereKeys) {
+      if (!this.isValidIdentifier(key)) {
+        throw new Error(`Invalid column name: ${key}`);
+      }
+    }
+    
+    const whereClause = whereKeys.map(key => `\`${key}\` = ?`).join(' AND ');
+    const sql = `DELETE FROM \`${table}\` WHERE ${whereClause}`;
     
     const result = await this.query(sql, Object.values(where));
     return {
@@ -165,18 +217,47 @@ class Database {
       },
       
       async insert(table, data) {
+        // 验证表名
+        if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(table)) {
+          throw new Error(`Invalid table name: ${table}`);
+        }
+        
         const keys = Object.keys(data);
+        
+        // 验证字段名
+        for (const key of keys) {
+          if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) {
+            throw new Error(`Invalid column name: ${key}`);
+          }
+        }
+        
         const values = Object.values(data);
         const placeholders = keys.map(() => '?').join(', ');
-        const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
+        const escapedKeys = keys.map(k => `\`${k}\``).join(', ');
+        const sql = `INSERT INTO \`${table}\` (${escapedKeys}) VALUES (${placeholders})`;
         const [result] = await connection.execute(sql, values);
         return { insertId: result.insertId, affectedRows: result.affectedRows };
       },
       
       async update(table, data, where) {
-        const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
-        const whereClause = Object.keys(where).map(key => `${key} = ?`).join(' AND ');
-        const sql = `UPDATE ${table} SET ${setClause} WHERE ${whereClause}`;
+        // 验证表名
+        if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(table)) {
+          throw new Error(`Invalid table name: ${table}`);
+        }
+        
+        const dataKeys = Object.keys(data);
+        const whereKeys = Object.keys(where);
+        
+        // 验证字段名
+        for (const key of [...dataKeys, ...whereKeys]) {
+          if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) {
+            throw new Error(`Invalid column name: ${key}`);
+          }
+        }
+        
+        const setClause = dataKeys.map(key => `\`${key}\` = ?`).join(', ');
+        const whereClause = whereKeys.map(key => `\`${key}\` = ?`).join(' AND ');
+        const sql = `UPDATE \`${table}\` SET ${setClause} WHERE ${whereClause}`;
         const params = [...Object.values(data), ...Object.values(where)];
         const [result] = await connection.execute(sql, params);
         return { affectedRows: result.affectedRows, changedRows: result.changedRows };

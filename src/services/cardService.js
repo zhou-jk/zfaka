@@ -209,15 +209,16 @@ class CardService {
         throw new BusinessError(ErrorCodes.PRODUCT_STOCK_EMPTY);
       }
       
-      const cardIds = cards.map(c => c.id);
+      const cardIds = cards.map(c => parseInt(c.id, 10));
       const now = new Date();
       
-      // 更新卡密状态为已售
+      // 更新卡密状态为已售（使用参数化查询防止SQL注入）
+      const placeholders = cardIds.map(() => '?').join(',');
       await connection.query(
         `UPDATE card_code 
          SET status = 1, order_id = ?, sold_at = ?, updated_at = ? 
-         WHERE id IN (${cardIds.join(',')})`,
-        [orderId, now, now]
+         WHERE id IN (${placeholders})`,
+        [orderId, now, now, ...cardIds]
       );
       
       if (shouldCommit) {
