@@ -573,7 +573,18 @@ router.get('/statistics/trend', asyncHandler(async (req, res) => {
   
   // 填充缺失的日期
   const result = [];
-  const dateMap = new Map(trend.map(t => [t.date.toISOString().split('T')[0], t]));
+  const dateMap = new Map(trend.map(t => {
+    // 处理日期格式，可能是 Date 对象或字符串
+    let dateStr;
+    if (t.date instanceof Date) {
+      dateStr = t.date.toISOString().split('T')[0];
+    } else if (typeof t.date === 'string') {
+      dateStr = t.date.split('T')[0].split(' ')[0];
+    } else {
+      dateStr = String(t.date);
+    }
+    return [dateStr, t];
+  }));
   
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date();
@@ -582,8 +593,8 @@ router.get('/statistics/trend', asyncHandler(async (req, res) => {
     const data = dateMap.get(dateStr);
     result.push({
       date: dateStr,
-      amount: data ? parseFloat(data.amount) : 0,
-      count: data ? parseInt(data.count) : 0,
+      amount: data ? parseFloat(data.amount) || 0 : 0,
+      count: data ? parseInt(data.count) || 0 : 0,
     });
   }
   
