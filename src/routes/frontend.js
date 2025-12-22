@@ -71,6 +71,7 @@ router.get('/product/:id', asyncHandler(async (req, res) => {
 router.get('/order/query', (req, res) => {
   res.render('frontend/order-query', {
     title: '订单查询',
+    query: req.query || {},
   });
 });
 
