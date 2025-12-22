@@ -19,7 +19,7 @@ router.post('/notify/alipay', asyncHandler(async (req, res) => {
   logger.info('支付宝回调请求:', req.body);
   
   try {
-    const result = await paymentService.handleAlipayNotify(req.body);
+    await paymentService.handleAlipayNotify(req.body);
     
     // 返回 success 给支付宝
     res.send('success');
@@ -103,7 +103,7 @@ router.get('/admin/:id', requireAdminAuth, asyncHandler(async (req, res) => {
      FROM payment p
      LEFT JOIN order_main o ON p.order_id = o.id
      WHERE p.id = ?`,
-    [id]
+    [id],
   );
   
   if (!payment) {
