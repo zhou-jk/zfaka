@@ -168,7 +168,9 @@ class OrderService {
     }
     
     let sql = `
-      SELECT o.id, o.order_no, o.product_name, o.quantity, o.unit_price,
+      SELECT o.id, o.order_no, 
+             COALESCE(o.product_name, p.name) as product_name, 
+             o.quantity, o.unit_price,
              o.total_amount, o.order_status, o.delivery_status, o.pay_time,
              o.created_at, p.image as product_image
       FROM order_main o

@@ -133,21 +133,27 @@
 
     let html = '';
     orders.forEach(order => {
-      const statusClass = {
-        'pending': 'warning',
-        'paid': 'info',
-        'delivered': 'success',
-        'cancelled': 'secondary',
-        'refunded': 'danger',
-      }[order.status] || 'secondary';
-
-      const statusText = {
-        'pending': '待支付',
-        'paid': '已支付',
-        'delivered': '已发货',
-        'cancelled': '已取消',
-        'refunded': '已退款',
-      }[order.status] || order.status;
+      // 订单状态：0=待支付, 1=支付中, 2=已支付, 3=已完成, 4=待人工, 5=已取消, 6=已退款
+      const orderStatus = parseInt(order.order_status) || 0;
+      const deliveryStatus = parseInt(order.delivery_status) || 0;
+      
+      // 综合显示状态
+      let statusClass, statusText;
+      if (orderStatus === 6) {
+        statusClass = 'danger'; statusText = '已退款';
+      } else if (orderStatus === 5) {
+        statusClass = 'secondary'; statusText = '已取消';
+      } else if (orderStatus === 3 || deliveryStatus === 2) {
+        statusClass = 'success'; statusText = '已完成';
+      } else if (orderStatus === 4) {
+        statusClass = 'warning'; statusText = '待处理';
+      } else if (orderStatus === 2) {
+        statusClass = 'info'; statusText = deliveryStatus === 1 ? '发货中' : '已支付';
+      } else if (orderStatus === 1) {
+        statusClass = 'info'; statusText = '支付中';
+      } else {
+        statusClass = 'warning'; statusText = '待支付';
+      }
 
       html += \`
         <div class="card mb-3">
@@ -159,7 +165,7 @@
             <div class="row mb-3">
               <div class="col-6">
                 <small class="text-muted">商品名称</small>
-                <div>\${order.product_name}</div>
+                <div>\${order.product_name || '未知商品'}</div>
               </div>
               <div class="col-3">
                 <small class="text-muted">数量</small>
