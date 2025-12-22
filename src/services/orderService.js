@@ -695,7 +695,7 @@ class OrderService {
     await db.update('order_main', {
       order_status: OrderStatus.PAID,
       pay_time: new Date(),
-      pay_method: 'manual',
+      pay_channel: 'manual',
     }, { id: orderId });
     
     await logger.logOperation(operatorId, 'ORDER_CONFIRM_PAYMENT', 'order', orderId, {
