@@ -14,6 +14,16 @@
     </nav>
   </div>
   <div>
+    <% if (order.order_status === 0 || order.order_status === 1) { %>
+      <button type="button" class="btn btn-success" id="confirmPaymentBtn">
+        <i class="bi bi-check-circle me-2"></i>确认收款
+      </button>
+    <% } %>
+    <% if (order.order_status === 2 || order.order_status === 4) { %>
+      <button type="button" class="btn btn-primary" id="manualDeliverBtn">
+        <i class="bi bi-send me-2"></i>手动发货
+      </button>
+    <% } %>
     <% if (order.order_status === 0) { %>
       <button type="button" class="btn btn-outline-secondary" id="cancelOrderBtn">
         <i class="bi bi-x-circle me-2"></i>取消订单
@@ -368,6 +378,46 @@
       } catch (error) {
         showAlert(error.message || '保存失败', 'danger');
       }
+    });
+  }
+
+  // 确认收款按钮
+  var confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
+  if (confirmPaymentBtn) {
+    confirmPaymentBtn.addEventListener('click', function() {
+      confirmDelete('确定要确认收款吗？确认后系统将自动尝试发货。', async function() {
+        try {
+          const response = await fetch('/api/admin/orders/<%= order.id %>/confirm-payment', {
+            method: 'POST',
+          });
+          const result = await response.json();
+          if (result.code !== 0) throw new Error(result.message);
+          showAlert('已确认收款');
+          location.reload();
+        } catch (error) {
+          showAlert(error.message || '操作失败', 'danger');
+        }
+      });
+    });
+  }
+
+  // 手动发货按钮
+  var manualDeliverBtn = document.getElementById('manualDeliverBtn');
+  if (manualDeliverBtn) {
+    manualDeliverBtn.addEventListener('click', function() {
+      confirmDelete('确定要手动发货吗？系统将为该订单分配卡密。', async function() {
+        try {
+          const response = await fetch('/api/admin/orders/<%= order.id %>/deliver', {
+            method: 'POST',
+          });
+          const result = await response.json();
+          if (result.code !== 0) throw new Error(result.message);
+          showAlert('发货成功');
+          location.reload();
+        } catch (error) {
+          showAlert(error.message || '发货失败', 'danger');
+        }
+      });
     });
   }
 </script>
