@@ -92,7 +92,9 @@
         <h5 class="mb-0">销售趋势</h5>
       </div>
       <div class="card-body">
-        <canvas id="salesChart" height="300"></canvas>
+        <div style="position: relative; height: 300px;">
+          <canvas id="salesChart"></canvas>
+        </div>
       </div>
     </div>
   </div>
@@ -104,7 +106,9 @@
         <h5 class="mb-0">支付渠道分布</h5>
       </div>
       <div class="card-body">
-        <canvas id="channelChart" height="250"></canvas>
+        <div style="position: relative; height: 250px;">
+          <canvas id="channelChart"></canvas>
+        </div>
         <div id="channelLegend" class="mt-3"></div>
       </div>
     </div>
@@ -147,7 +151,9 @@
         <h5 class="mb-0">订单状态分布</h5>
       </div>
       <div class="card-body">
-        <canvas id="statusChart" height="200"></canvas>
+        <div style="position: relative; height: 200px;">
+          <canvas id="statusChart"></canvas>
+        </div>
         <div class="row text-center mt-4" id="statusStats">
           <!-- 动态填充 -->
         </div>
@@ -230,11 +236,11 @@
     salesChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.map(d => d.date),
+        labels: data.map(function(d) { return d.date; }),
         datasets: [
           {
             label: '销售额',
-            data: data.map(d => d.sales),
+            data: data.map(function(d) { return d.amount || d.sales || 0; }),
             borderColor: '#0d6efd',
             backgroundColor: 'rgba(13, 110, 253, 0.1)',
             fill: true,
@@ -243,7 +249,7 @@
           },
           {
             label: '订单数',
-            data: data.map(d => d.orders),
+            data: data.map(function(d) { return d.count || d.orders || 0; }),
             borderColor: '#198754',
             backgroundColor: 'transparent',
             borderDash: [5, 5],
