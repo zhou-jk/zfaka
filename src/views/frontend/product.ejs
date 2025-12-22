@@ -63,12 +63,12 @@
               <div class="col-md-6">
                 <label class="form-label">购买数量</label>
                 <div class="input-group">
-                  <button type="button" class="btn btn-outline-secondary" onclick="changeQuantity(-1)">
+                  <button type="button" class="btn btn-outline-secondary" id="decreaseQty">
                     <i class="bi bi-dash"></i>
                   </button>
                   <input type="number" class="form-control text-center" name="quantity" id="quantity" 
                          value="1" min="${product.min_quantity}" max="${Math.min(product.max_quantity, product.stock_count)}">
-                  <button type="button" class="btn btn-outline-secondary" onclick="changeQuantity(1)">
+                  <button type="button" class="btn btn-outline-secondary" id="increaseQty">
                     <i class="bi bi-plus"></i>
                   </button>
                 </div>
@@ -130,7 +130,7 @@
           <div class="text-danger fs-2 fw-bold" id="payAmount">¥0.00</div>
         </div>
         <div class="d-grid gap-2">
-          <button type="button" class="btn btn-outline-primary btn-lg" onclick="pay('alipay')">
+          <button type="button" class="btn btn-outline-primary btn-lg" id="payAlipayBtn">
             <i class="bi bi-alipay me-2"></i>支付宝支付
           </button>
         </div>
@@ -162,7 +162,19 @@
     document.getElementById('totalAmount').textContent = '¥' + total;
   }
 
+  // 绑定数量按钮事件
+  document.getElementById('decreaseQty').addEventListener('click', function() {
+    changeQuantity(-1);
+  });
+  document.getElementById('increaseQty').addEventListener('click', function() {
+    changeQuantity(1);
+  });
   document.getElementById('quantity').addEventListener('input', updateTotal);
+
+  // 支付宝支付按钮
+  document.getElementById('payAlipayBtn').addEventListener('click', function() {
+    pay('alipay');
+  });
 
   // 提交订单
   document.getElementById('orderForm').addEventListener('submit', async function(e) {

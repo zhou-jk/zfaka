@@ -98,7 +98,7 @@
                       ${card.card_secret ? `<br><small class="text-muted">密钥: ${card.card_secret}</small>` : ''}
                     </td>
                     <td>
-                      <button class="btn btn-sm btn-outline-primary" onclick="copyCard(${index})">
+                      <button class="btn btn-sm btn-outline-primary btn-copy-card" data-index="${index}">
                         <i class="bi bi-clipboard"></i>
                       </button>
                     </td>
@@ -108,7 +108,7 @@
             </table>
           </div>
           <div class="mt-3 text-end">
-            <button class="btn btn-outline-primary" onclick="copyAllCards()">
+            <button class="btn btn-outline-primary" id="copyAllCardsBtn">
               <i class="bi bi-clipboard-check me-1"></i>复制全部
             </button>
           </div>
@@ -124,7 +124,7 @@
         </div>
         <div class="card-body">
           <div class="d-grid gap-2">
-            <button class="btn btn-outline-primary btn-lg" onclick="pay('alipay')">
+            <button class="btn btn-outline-primary btn-lg" id="payAlipayBtn">
               <i class="bi bi-alipay me-2"></i>支付宝支付
             </button>
           </div>
@@ -248,14 +248,14 @@
   function copyCard(index) {
     const card = cards[index];
     const text = card.card_code || card.content || '';
-    navigator.clipboard.writeText(text).then(() => {
+    navigator.clipboard.writeText(text).then(function() {
       alert('复制成功');
     });
   }
 
   function copyAllCards() {
-    const text = cards.map(c => c.card_code || c.content || '').join('\\n');
-    navigator.clipboard.writeText(text).then(() => {
+    const text = cards.map(function(c) { return c.card_code || c.content || ''; }).join('\\n');
+    navigator.clipboard.writeText(text).then(function() {
       alert('全部卡密已复制到剪贴板');
     });
   }
@@ -281,6 +281,29 @@
     } catch (error) {
       alert(error.message || '支付发起失败');
     }
+  }
+
+  // 绑定复制单个卡密按钮
+  document.querySelectorAll('.btn-copy-card').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      copyCard(parseInt(this.dataset.index));
+    });
+  });
+
+  // 绑定复制全部按钮
+  var copyAllBtn = document.getElementById('copyAllCardsBtn');
+  if (copyAllBtn) {
+    copyAllBtn.addEventListener('click', function() {
+      copyAllCards();
+    });
+  }
+
+  // 绑定支付宝支付按钮
+  var payBtn = document.getElementById('payAlipayBtn');
+  if (payBtn) {
+    payBtn.addEventListener('click', function() {
+      pay('alipay');
+    });
   }
 
   // 待支付订单自动刷新检查状态
